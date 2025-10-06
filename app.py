@@ -188,7 +188,7 @@ CHARACTER_STRENGTHS = {
         "domain": "🕊️ Mäßigung",
         "color": "#59A14F",
         "questions": [
-            "Ich überlege consequences, bevor ich handle",
+            "Ich überlege Konsequenzen, bevor ich handle",
             "Risiken schätze ich sorgfältig ab",
             "Impulsive Entscheidungen vermeide ich",
             "Sorgfältige Planung ist mir wichtig"
