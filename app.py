@@ -284,7 +284,7 @@ def main():
 
     # Initialisiere Session-State
     if "responses" not in st.session_state:
-        st.session_state.responses = {}
+        st.session_state.responses = {strength: {} for strength in questions.keys()}
 
     st.header("📝 Fragebogen")
     st.caption("Bitte beantworte alle Fragen ehrlich. 1 = Trifft nicht zu, 5 = Trifft voll zu.")
@@ -314,9 +314,11 @@ def main():
     # Ergebnisberechnung
     if st.button("🚀 Ergebnisse berechnen", type="primary"):
         # Prüfung, ob alle Fragen beantwortet
-        unanswered = any(v is None for s in st.session_state.responses.values() for v in s.values())
-        if unanswered:
-            st.error("Bitte beantworte alle Fragen, bevor du fortfährst.")
+        total_expected = sum(len(v["questions"]) for v in questions.values())
+        total_answered = sum(len(responses) for responses in st.session_state.responses.values())
+        
+        if total_answered < total_expected:
+            st.error(f"Bitte beantworte alle Fragen bevor du fortfährst. Noch {total_expected - total_answered} Fragen offen.")
             return
 
         with st.spinner("Berechne Ergebnisse..."):
