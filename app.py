@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from math import pi
 
 # =====================
 # 🔧 Grundkonfiguration
@@ -74,7 +73,7 @@ CHARACTER_STRENGTHS = {
     "Bindungsfähigkeit": {"domain": "🤝 Humanität", "color": "#E15759", "questions": [
         "Tiefe zwischenmenschliche Beziehungen sind mir wichtig",
         "Ich pflege enge Verbindungen zu meinen Liebsten",
-        "Gegenseitiges Vertrauen ist die Basis meiner Beziehungen",
+        "Gegenseitiges Vertreuen ist die Basis meiner Beziehungen",
         "Ich investiere Zeit und Energie in meine wichtigsten Beziehungen"
     ]},
     "Freundlichkeit": {"domain": "🤝 Humanität", "color": "#E15759", "questions": [
@@ -190,7 +189,7 @@ def calculate_results(responses):
         if answers:
             raw = sum(answers.values())
             max_possible = len(answers) * 5
-            pct = (raw / max_possible) * 100
+            pct = (raw / max_possible) * 100 if max_possible > 0 else 0
             scores[s] = {
                 "score": pct,
                 "domain": CHARACTER_STRENGTHS[s]["domain"],
@@ -198,10 +197,16 @@ def calculate_results(responses):
                 "raw_score": raw,
                 "max_possible": max_possible,
             }
+    
+    # Relative Score basierend auf absoluten Werten berechnen
     if scores:
-        max_score = max(v["score"] for v in scores.values())
+        # Verwende den absoluten Score statt Prozentsatz für relative Berechnung
+        max_absolute = max(v["raw_score"] for v in scores.values())
         for s in scores:
-            scores[s]["relative_score"] = (scores[s]["score"] / max_score) * 100 if max_score > 0 else 0
+            if max_absolute > 0:
+                scores[s]["relative_score"] = (scores[s]["raw_score"] / max_absolute) * 100
+            else:
+                scores[s]["relative_score"] = 0
     return scores
 
 
