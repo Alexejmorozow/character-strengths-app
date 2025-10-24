@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
+from math import pi
 
 # =====================
 # 🔧 Grundkonfiguration
@@ -163,7 +165,7 @@ CHARACTER_STRENGTHS = {
 
 LIKERT_OPTIONS = {
     1: "Trifft nicht zu",
-    2: "Trifft eher nicht zu",
+    2: "Trifft eher nicht zu", 
     3: "Neutral",
     4: "Trifft eher zu",
     5: "Trifft voll zu"
@@ -252,7 +254,52 @@ def plot_results(results):
                       "✨ Spiritualität": "#EDC948"
                   },
                   title="Durchschnittliche Ausprägung nach Domänen")
-    return fig1, fig2
+    
+    # Spider Chart für Domänen
+    fig3 = create_spider_chart(domain_scores)
+    
+    return fig1, fig2, fig3
+
+
+def create_spider_chart(domain_scores):
+    categories = domain_scores['Domäne'].tolist()
+    values = domain_scores['Wert'].tolist()
+    
+    # Das Radar-Chart schließen, indem wir den ersten Punkt am Ende wiederholen
+    categories = categories + [categories[0]]
+    values = values + [values[0]]
+    
+    fig = go.Figure(data=
+        go.Scatterpolar(
+            r=values,
+            theta=categories,
+            fill='toself',
+            fillcolor='rgba(100, 149, 237, 0.3)',
+            line=dict(color='royalblue', width=2),
+            marker=dict(size=4)
+        )
+    )
+    
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 100],
+                tickfont=dict(size=10)
+            ),
+            angularaxis=dict(
+                tickfont=dict(size=11),
+                rotation=90,
+                direction="clockwise"
+            )
+        ),
+        showlegend=False,
+        title="Charakterstärken-Profil nach Domänen",
+        title_x=0.5,
+        height=500
+    )
+    
+    return fig
 
 
 # ==========================
@@ -272,7 +319,7 @@ def main():
 
     version_key = {
         "Kurz (48 Fragen)": "short",
-        "Mittel (72 Fragen)": "medium",
+        "Mittel (72 Fragen)": "medium", 
         "Vollständig (96 Fragen)": "full"
     }[version]
 
@@ -289,12 +336,12 @@ def main():
     st.header("📝 Fragebogen")
     st.caption("Bitte beantworte alle Fragen ehrlich. 1 = Trifft nicht zu, 5 = Trifft voll zu.")
 
-    # Fragenrendering
+    # Fragenrendering - OHNE Domänen-Anzeige
     answered = 0
     for strength, data in questions.items():
         st.subheader(strength)
-        st.caption(f"Domäne: {data['domain']}")
-
+        # Domänen-Info entfernt um Bias zu vermeiden
+        
         strength_responses = {}
         for i, q in enumerate(data["questions"]):
             key = f"{strength}_{i}"
@@ -324,9 +371,9 @@ def main():
         with st.spinner("Berechne Ergebnisse..."):
             results = calculate_results(st.session_state.responses)
             ranking_df = create_ranking_table(results)
-            fig1, fig2 = plot_results(results)
+            fig1, fig2, fig3 = plot_results(results)
 
-            tab1, tab2, tab3 = st.tabs(["📊 Rangliste", "📈 Visualisierung", "💾 Export"])
+            tab1, tab2, tab3, tab4 = st.tabs(["📊 Rangliste", "📈 Visualisierung", "🕷️ Spider-Diagramm", "💾 Export"])
 
             with tab1:
                 st.dataframe(ranking_df, use_container_width=True)
@@ -339,6 +386,10 @@ def main():
                     st.plotly_chart(fig2, use_container_width=True)
 
             with tab3:
+                st.plotly_chart(fig3, use_container_width=True)
+                st.info("💡 Das Spider-Diagramm zeigt Ihre durchschnittliche Ausprägung in den sechs Charakterstärken-Domänen.")
+
+            with tab4:
                 csv_data = ranking_df.to_csv(index=False).encode("utf-8")
                 st.download_button(
                     "📥 Ergebnisse als CSV herunterladen",
