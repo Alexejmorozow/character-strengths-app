@@ -359,7 +359,17 @@ def main():
     st.sidebar.write(f"**{total_questions} Fragen** insgesamt")
     st.sidebar.write(f"**{len(questions)} Charakterstärken**")
 
-    # Initialisiere Session-State
+    # Initialisiere Session-State mit Version-Tracking
+    if "current_version" not in st.session_state:
+        st.session_state.current_version = version_key
+    
+    # Wenn Version geändert wurde, reset die Fragen und Antworten
+    if st.session_state.current_version != version_key:
+        st.session_state.responses = {}
+        st.session_state.randomized_questions = get_randomized_question_list(questions)
+        st.session_state.current_version = version_key
+    
+    # Initialisiere falls nicht vorhanden
     if "responses" not in st.session_state:
         st.session_state.responses = {}
     if "randomized_questions" not in st.session_state:
@@ -372,21 +382,23 @@ def main():
     # Fragen in randomisierter Reihenfolge anzeigen
     answered = 0
     for i, q in enumerate(st.session_state.randomized_questions):
-        st.subheader(f"Frage {i+1} von {total_questions}")
-        
-        response = st.radio(
-            q["text"],
-            options=list(LIKERT_OPTIONS.keys()),
-            format_func=lambda x: LIKERT_OPTIONS[x],
-            key=q["id"],
-            horizontal=True,
-            index=(st.session_state.responses.get(q["id"], 0) - 1) if st.session_state.responses.get(q["id"]) else 0
-        )
-        
-        # Speichere Antwort
-        if response:
-            st.session_state.responses[q["id"]] = response
-            answered += 1
+        # Nur anzeigen wenn wir innerhalb der aktuellen Fragenanzahl sind
+        if i < total_questions:
+            st.subheader(f"Frage {i+1} von {total_questions}")
+            
+            response = st.radio(
+                q["text"],
+                options=list(LIKERT_OPTIONS.keys()),
+                format_func=lambda x: LIKERT_OPTIONS[x],
+                key=q["id"],
+                horizontal=True,
+                index=(st.session_state.responses.get(q["id"], 0) - 1) if st.session_state.responses.get(q["id"]) else 0
+            )
+            
+            # Speichere Antwort
+            if response:
+                st.session_state.responses[q["id"]] = response
+                answered += 1
 
     # Fortschritt - BEREINIGT
     if total_questions > 0:
