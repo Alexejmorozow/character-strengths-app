@@ -388,8 +388,14 @@ def main():
             st.session_state.responses[q["id"]] = response
             answered += 1
 
-    # Fortschritt
-    progress = answered / total_questions if total_questions > 0 else 0
+    # Fortschritt - BEREINIGT
+    if total_questions > 0:
+        progress = answered / total_questions
+        # Sicherstellen, dass progress zwischen 0 und 1 liegt
+        progress = max(0.0, min(1.0, progress))
+    else:
+        progress = 0.0
+
     st.progress(progress)
     st.caption(f"Fortschritt: {answered}/{total_questions} beantwortet")
 
