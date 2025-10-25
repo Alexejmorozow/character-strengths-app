@@ -19,7 +19,7 @@ st.set_page_config(
 CHARACTER_STRENGTHS = {
     "Liebe zum Lernen": {"domain": "🧠 Weisheit & Wissen", "color": "#4E79A7", "questions": [
         "Ich lese regelmäßig Bücher oder Artikel, um Neues zu lernen",
-        "Neue Themen wecken sofort mein Interesse", 
+        "Neue Themen wecken sofort mein Interesse",
         "Ich besuche häufig Kurse oder Workshops aus Interesse am Thema",
         "Das Gefühl, etwas dazugelernt zu haben, bereitet mir Freude"
     ]},
@@ -29,14 +29,145 @@ CHARACTER_STRENGTHS = {
         "Ich ändere meine Meinung, wenn neue Fakten vorliegen",
         "Komplexe Probleme analysiere ich gründlich"
     ]},
-    # ... (alle anderen Stärken gleich wie vorher)
+    "Neugier": {"domain": "🧠 Weisheit & Wissen", "color": "#4E79A7", "questions": [
+        "Ich stelle oft Fragen, um Dinge besser zu verstehen",
+        "Unbekannte Orte und Aktivitäten reizen mich",
+        "Ich erkunde gerne neue Ideen und Konzepte",
+        "Alltägliche Dinge betrachte ich oft mit Staunen"
+    ]},
+    "Kreativität": {"domain": "🧠 Weisheit & Wissen", "color": "#4E79A7", "questions": [
+        "Ich habe oft originelle und einfallsreiche Ideen",
+        "Ich suche nach neuen Wegen, um Aufgaben zu erledigen",
+        "Kreative Lösungen machen mir besondere Freude",
+        "Ich denke gerne über unkonventionelle Ansätze nach"
+    ]},
+    "Weisheit": {"domain": "🧠 Weisheit & Wissen", "color": "#4E79A7", "questions": [
+        "Andere Menschen bitten mich oft um Rat",
+        "Ich betrachte Situationen aus einer langfristigen Perspektive",
+        "Meine Lebenserfahrung hilft mir bei schwierigen Entscheidungen",
+        "Ich kann gut zwischen Wichtigem und Unwichtigem unterscheiden"
+    ]},
+    "Tapferkeit": {"domain": "💪 Mut", "color": "#F28E2B", "questions": [
+        "Ich stehe für meine Überzeugungen ein, auch gegen Widerstand",
+        "Angst hält mich nicht davon ab, das Richtige zu tun",
+        "Ich konfrontiere schwierige Situationen direkt",
+        "Bei Bedrohungen bewahre ich die Ruhe"
+    ]},
+    "Ausdauer": {"domain": "💪 Mut", "color": "#F28E2B", "questions": [
+        "Ich gebe nicht auf, auch wenn Aufgaben schwierig werden",
+        "Langfristige Projekte halte ich konsequent durch",
+        "Rückschläge motivieren mich, es weiter zu versuchen",
+        "Ich erledige Aufgaben stets bis zum Ende"
+    ]},
+    "Authentizität": {"domain": "💪 Mut", "color": "#F28E2B", "questions": [
+        "Ich bin immer ich selbst, egal in welcher Situation",
+        "Ich stehe zu meinen Werten und Prinzipien",
+        "Meine Handlungen entsprechen meinen Überzeugungen",
+        "Ich täusche nichts vor, um anderen zu gefallen"
+    ]},
+    "Enthusiasmus": {"domain": "💪 Mut", "color": "#F28E2B", "questions": [
+        "Ich gehe Aufgaben mit großer Begeisterung an",
+        "Meine Energie steckt oft andere an",
+        "Ich betreibe Dinge mit vollem Einsatz",
+        "Lebensfreude ist ein wichtiger Teil meines Wesens"
+    ]},
+    "Bindungsfähigkeit": {"domain": "🤝 Humanität", "color": "#E15759", "questions": [
+        "Tiefe zwischenmenschliche Beziehungen sind mir wichtig",
+        "Ich pflege enge Verbindungen zu meinen Liebsten",
+        "Gegenseitiges Vertreuen ist die Basis meiner Beziehungen",
+        "Ich investiere Zeit und Energie in meine wichtigsten Beziehungen"
+    ]},
+    "Freundlichkeit": {"domain": "🤝 Humanität", "color": "#E15759", "questions": [
+        "Ich helfe anderen gerne ohne Gegenleistung",
+        "Großzügigkeit macht mir Freude",
+        "Ich bemerke, wenn andere Unterstützung brauchen",
+        "Kleine Gefälligkeiten sind für mich selbstverständlich"
+    ]},
+    "Soziale Intelligenz": {"domain": "🤝 Humanität", "color": "#E15759", "questions": [
+        "Ich erkenne schnell die Stimmungen anderer Menschen",
+        "In sozialen Situationen weiß ich intuitiv, was angemessen ist",
+        "Ich kann mich gut in andere hineinversetzen",
+        "Zwischenmenschliche Dynamiken verstehe ich gut"
+    ]},
+    "Teamwork": {"domain": "⚖️ Gerechtigkeit", "color": "#76B7B2", "questions": [
+        "In der Gruppe arbeite ich besonders effektiv",
+        "Team-Erfolge sind mir wichtiger als Einzelleistungen",
+        "Ich trage loyal zum Gruppenerfolg bei",
+        "Gemeinsame Ziele motivieren mich besonders"
+    ]},
+    "Fairness": {"domain": "⚖️ Gerechtigkeit", "color": "#76B7B2", "questions": [
+        "Ich behandle alle Menschen gleich, unabhängig von Herkunft oder Status",
+        "Bei Entscheidungen lasse ich mich nicht von Sympathien leiten",
+        "Gerechtigkeit ist mir ein wichtiges Anliegen",
+        "Ich setze mich für faire Behandlung ein"
+    ]},
+    "Führungsvermögen": {"domain": "⚖️ Gerechtigkeit", "color": "#76B7B2", "questions": [
+        "Ich kann Gruppen gut motivieren und leiten",
+        "In Leitungsrollen fühle ich mich wohl",
+        "Ich organisiere gerne Aktivitäten für Gruppen",
+        "Andere folgen mir freiwillig"
+    ]},
+    "Vergebungsbereitschaft": {"domain": "🕊️ Mäßigung", "color": "#59A14F", "questions": [
+        "Ich kann anderen leicht verzeihen",
+        "Nach Konflikten gewähre ich eine zweite Chance",
+        "Groll trage ich nicht lange mit mir herum",
+        "Vergebung ist mir wichtiger als Rache"
+    ]},
+    "Bescheidenheit": {"domain": "🕊️ Mäßigung", "color": "#59A14F", "questions": [
+        "Ich prahle nicht mit meinen Erfolgen",
+        "Im Mittelpunkt stehen macht mir nichts aus",
+        "Meine Fähigkeiten sprechen für sich selbst",
+        "Ich sehe mich nicht als etwas Besonderes"
+    ]},
+    "Vorsicht": {"domain": "🕊️ Mäßigung", "color": "#59A14F", "questions": [
+        "Ich überlege Konsequenzen, bevor ich handle",
+        "Risiken schätze ich sorgfältig ab",
+        "Impulsive Entscheidungen vermeide ich",
+        "Sorgfältige Planung ist mir wichtig"
+    ]},
+    "Selbstregulation": {"domain": "🕊️ Mäßigung", "color": "#59A14F", "questions": [
+        "Ich kann meine Gefühle gut kontrollieren",
+        "Versuchungen widerstehe ich leicht",
+        "Disziplin fällt mir nicht schwer",
+        "Ich bleibe auch unter Stress gelassen"
+    ]},
+    "Sinn für das Schöne": {"domain": "✨ Spiritualität", "color": "#EDC948", "questions": [
+        "Ich bewundere häufig Schönheit in Natur oder Kunst",
+        "Ästhetische Erlebnisse berühren mich tief",
+        "Ich nehme Schönheit im Alltag bewusst wahr",
+        "Kunst, Musik oder Natur begeistern mich"
+    ]},
+    "Dankbarkeit": {"domain": "✨ Spiritualität", "color": "#EDC948", "questions": [
+        "Ich bin dankbar für die guten Dinge in meinem Leben",
+        "Oft halte ich inne, um meine Dankbarkeit auszudrücken",
+        "Ich schätze bewusst, was ich habe",
+        "Dankbarkeit ist ein täglicher Teil meines Lebens"
+    ]},
+    "Hoffnung": {"domain": "✨ Spiritualität", "color": "#EDC948", "questions": [
+        "Ich blicke optimistisch in die Zukunft",
+        "Auch in schwierigen Zeiten sehe ich Licht am Horizont",
+        "Ich vertraue darauf, dass sich Dinge zum Guten wenden",
+        "Positive Erwartungen prägen meine Haltung"
+    ]},
+    "Humor": {"domain": "✨ Spiritualität", "color": "#EDC948", "questions": [
+        "Ich lache gerne und bringe andere zum Lachen",
+        "Humor hilft mir in schwierigen Situationen",
+        "Ich sehe oft die komische Seite des Lebens",
+        "Spielerische Leichtigkeit ist mir wichtig"
+    ]},
+    "Spiritualität": {"domain": "✨ Spiritualität", "color": "#EDC948", "questions": [
+        "Ich habe klare Überzeugungen über den Sinn des Lebens",
+        "Spiritualität gibt mir Halt und Orientierung",
+        "Ich denke über größere Zusammenhänge nach",
+        "Mein Glaube beeinflusst mein Handeln"
+    ]}
 }
 
 LIKERT_OPTIONS = {
     1: "Trifft nicht zu",
     2: "Trifft eher nicht zu", 
     3: "Neutral",
-    4: "Trifft eher zu", 
+    4: "Trifft eher zu",
     5: "Trifft voll zu"
 }
 
@@ -46,18 +177,11 @@ LIKERT_OPTIONS = {
 def get_questions_for_version(version):
     mapping = {"short": 2, "medium": 3, "full": 4}
     limit = mapping.get(version, 3)
-    
-    # Zufällige Reihenfolge der Fragen pro Stärke
-    randomized_questions = {}
-    for strength, data in CHARACTER_STRENGTHS.items():
-        questions = data["questions"][:limit]
-        randomized_questions[strength] = {
-            "domain": data["domain"],
-            "color": data["color"], 
-            "questions": questions
-        }
-    
-    return randomized_questions
+    questions = {
+        s: {"domain": d["domain"], "color": d["color"], "questions": d["questions"][:limit]}
+        for s, d in CHARACTER_STRENGTHS.items()
+    }
+    return questions
 
 def get_randomized_question_list(questions):
     """Erstellt eine randomisierte Liste aller Fragen ohne Stärken-Namen"""
@@ -140,7 +264,7 @@ def plot_results(results):
         color="Domäne",
         color_discrete_map={
             "🧠 Weisheit & Wissen": "#4E79A7",
-            "💪 Mut": "#F28E2B", 
+            "💪 Mut": "#F28E2B",
             "🤝 Humanität": "#E15759",
             "⚖️ Gerechtigkeit": "#76B7B2",
             "🕊️ Mäßigung": "#59A14F",
@@ -153,8 +277,17 @@ def plot_results(results):
 
     domain_scores = df.groupby("Domäne")["Wert"].mean().reset_index()
     fig2 = px.pie(domain_scores, values="Wert", names="Domäne", hole=0.4,
+                  color_discrete_map={
+                      "🧠 Weisheit & Wissen": "#4E79A7",
+                      "💪 Mut": "#F28E2B",
+                      "🤝 Humanität": "#E15759",
+                      "⚖️ Gerechtigkeit": "#76B7B2",
+                      "🕊️ Mäßigung": "#59A14F",
+                      "✨ Spiritualität": "#EDC948"
+                  },
                   title="Durchschnittliche Ausprägung nach Domänen")
     
+    # Spider Chart für Domänen
     fig3 = create_spider_chart(domain_scores)
     
     return fig1, fig2, fig3
@@ -163,6 +296,7 @@ def create_spider_chart(domain_scores):
     categories = domain_scores['Domäne'].tolist()
     values = domain_scores['Wert'].tolist()
     
+    # Das Radar-Chart schließen, indem wir den ersten Punkt am Ende wiederholen
     categories = categories + [categories[0]]
     values = values + [values[0]]
     
@@ -171,14 +305,29 @@ def create_spider_chart(domain_scores):
             r=values,
             theta=categories,
             fill='toself',
-            line=dict(color='royalblue', width=2)
+            fillcolor='rgba(100, 149, 237, 0.3)',
+            line=dict(color='royalblue', width=2),
+            marker=dict(size=4)
         )
     )
     
     fig.update_layout(
-        polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 100],
+                tickfont=dict(size=10)
+            ),
+            angularaxis=dict(
+                tickfont=dict(size=11),
+                rotation=90,
+                direction="clockwise"
+            )
+        ),
         showlegend=False,
-        title="Charakterstärken-Profil nach Domänen"
+        title="Charakterstärken-Profil nach Domänen",
+        title_x=0.5,
+        height=500
     )
     
     return fig
@@ -200,37 +349,28 @@ def main():
 
     version_key = {
         "Kurz (48 Fragen)": "short",
-        "Mittel (72 Fragen)": "medium",
+        "Mittel (72 Fragen)": "medium", 
         "Vollständig (96 Fragen)": "full"
     }[version]
+
+    questions = get_questions_for_version(version_key)
+    total_questions = sum(len(v["questions"]) for v in questions.values())
+
+    st.sidebar.write(f"**{total_questions} Fragen** insgesamt")
+    st.sidebar.write(f"**{len(questions)} Charakterstärken**")
 
     # Initialisiere Session-State
     if "responses" not in st.session_state:
         st.session_state.responses = {}
-    if "questions_initialized" not in st.session_state:
-        st.session_state.questions_initialized = False
     if "randomized_questions" not in st.session_state:
-        st.session_state.randomized_questions = []
-
-    # Fragen initialisieren
-    if not st.session_state.questions_initialized:
-        questions = get_questions_for_version(version_key)
         st.session_state.randomized_questions = get_randomized_question_list(questions)
-        st.session_state.questions_initialized = True
 
-    total_questions = len(st.session_state.randomized_questions)
-    answered = len(st.session_state.responses)
-
-    st.sidebar.write(f"**{total_questions} Fragen** insgesamt")
-    st.sidebar.write(f"**{len(CHARACTER_STRENGTHS)} Charakterstärken**")
-    st.sidebar.write(f"**{answered}/{total_questions} beantwortet**")
-
-    # Fragebogen
     st.header("📝 Fragebogen")
     st.info("💡 Die Fragen werden in zufälliger Reihenfolge angezeigt, um beste Ergebnisse zu gewährleisten.")
     st.caption("Bitte beantworte alle Fragen ehrlich. 1 = Trifft nicht zu, 5 = Trifft voll zu.")
 
     # Fragen in randomisierter Reihenfolge anzeigen
+    answered = 0
     for i, q in enumerate(st.session_state.randomized_questions):
         st.subheader(f"Frage {i+1} von {total_questions}")
         
@@ -246,48 +386,39 @@ def main():
         # Speichere Antwort
         if response:
             st.session_state.responses[q["id"]] = response
+            answered += 1
 
     # Fortschritt
     progress = answered / total_questions if total_questions > 0 else 0
     st.progress(progress)
     st.caption(f"Fortschritt: {answered}/{total_questions} beantwortet")
 
-    # Ergebnisse
+    # Ergebnisberechnung
     if st.button("🚀 Ergebnisse berechnen", type="primary"):
         if answered < total_questions:
             st.error(f"Bitte beantworte alle Fragen bevor du fortfährst. Noch {total_questions - answered} Fragen offen.")
             return
 
-        with st.spinner("Analysiere deine Charakterstärken..."):
+        with st.spinner("Berechne Ergebnisse..."):
             results = calculate_results(st.session_state.responses)
-            
-            st.balloons()
-            st.success("🎉 Auswertung abgeschlossen! Hier sind deine persönlichen Charakterstärken:")
-            
             ranking_df = create_ranking_table(results)
             fig1, fig2, fig3 = plot_results(results)
 
-            tab1, tab2, tab3, tab4 = st.tabs(["📊 Rangliste", "📈 Visualisierung", "🕷️ Profil", "💾 Export"])
+            tab1, tab2, tab3, tab4 = st.tabs(["📊 Rangliste", "📈 Visualisierung", "🕷️ Spider-Diagramm", "💾 Export"])
 
             with tab1:
                 st.dataframe(ranking_df, use_container_width=True)
-                
-                # Top-Stärken hervorheben
-                st.subheader("🎯 Deine Top-Stärken")
-                top_3 = ranking_df.head(3)
-                for idx, row in top_3.iterrows():
-                    st.info(f"**{row['Rang']}. {row['Stärke']}** ({row['Domäne']}) - {row['Wert']}")
 
             with tab2:
-                col1, col2 = st.columns(2)
-                with col1:
+                c1, c2 = st.columns(2)
+                with c1:
                     st.plotly_chart(fig1, use_container_width=True)
-                with col2:
+                with c2:
                     st.plotly_chart(fig2, use_container_width=True)
 
             with tab3:
                 st.plotly_chart(fig3, use_container_width=True)
-                st.info("💡 Das Spider-Diagramm zeigt deine durchschnittliche Ausprägung in den sechs Charakterstärken-Domänen.")
+                st.info("💡 Das Spider-Diagramm zeigt Ihre durchschnittliche Ausprägung in den sechs Charakterstärken-Domänen.")
 
             with tab4:
                 csv_data = ranking_df.to_csv(index=False).encode("utf-8")
@@ -297,6 +428,8 @@ def main():
                     file_name="via_charakterstaerken_ergebnisse.csv",
                     mime="text/csv"
                 )
+
+            st.success("🎉 Auswertung abgeschlossen! Deine Charakterstärken wurden erfolgreich analysiert.")
 
 if __name__ == "__main__":
     main()
