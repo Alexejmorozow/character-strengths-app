@@ -10,8 +10,48 @@ import random
 st.set_page_config(
     page_title="VIA Charakterstärken Test",
     page_icon="🧠",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
+
+# CSS für besseres Design
+st.markdown("""
+<style>
+    .main-header {
+        font-size: 3rem !important;
+        color: #1f77b4;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .sub-header {
+        font-size: 1.5rem !important;
+        color: #2e86ab;
+        margin-bottom: 1rem;
+    }
+    .info-box {
+        background-color: #f0f8ff;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border-left: 5px solid #1f77b4;
+        margin: 1rem 0;
+    }
+    .progress-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 1rem;
+        border-radius: 10px;
+        color: white;
+        margin: 1rem 0;
+    }
+    .strength-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin: 0.5rem 0;
+        border-left: 4px solid #1f77b4;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # =========================
 # 📚 Charakterstärken-Daten
@@ -342,20 +382,12 @@ def main():
     # Einleitungstext
     st.markdown("""
     Die folgenden Fragen beziehen sich auf Merkmale und Verhaltensweisen, die viele Menschen als positiv einschätzen. 
-    Bitte beantworten Sie die Aussagen ehrlich und geben Sie an, in welchem Maß sie auf Sie persönlich zutreffen. 
-    
+    Bitte beantworten Sie die Aussagen ehrlich und geben Sie an, in welchem Maß sie auf Sie persönlich zutreffen.
+
     Da der Fragebogen in drei unterschiedlichen Längen verfügbar ist, können Sie selbst entscheiden, welche Variante Sie bearbeiten möchten: 
     **Kurz (48 Fragen)**, **Mittel (72 Fragen)** oder **Vollständig (96 Fragen)**.
-    
-    Die vollständige Version liefert ein differenzierteres und umfassenderes Bild Ihrer Charakterstärken, nimmt jedoch etwas mehr Zeit in Anspruch.
 
-    **Bitte verwenden Sie für jede Aussage die folgende Antwortskala:**
-    
-    - **Trifft nicht zu** – wenn die Aussage überhaupt nicht auf Sie zutrifft
-    - **Trifft eher nicht zu** – wenn die Aussage nur teilweise oder kaum auf Sie zutrifft  
-    - **Neutral** – wenn die Aussage weder zutrifft noch nicht zutrifft
-    - **Trifft eher zu** – wenn die Aussage größtenteils auf Sie zutrifft
-    - **Trifft voll zu** – wenn die Aussage vollständig oder ganz auf Sie zutrifft
+    Die vollständige Version liefert ein differenzierteres und umfassenderes Bild Ihrer Charakterstärken, nimmt jedoch etwas mehr Zeit in Anspruch.
     """)
 
     # Sidebar
@@ -396,6 +428,7 @@ def main():
 
     st.header("📝 Fragebogen")
     st.info("💡 Die Fragen werden in zufälliger Reihenfolge angezeigt, um beste Ergebnisse zu gewährleisten.")
+    st.caption("Bitte beantworte alle Fragen ehrlich. 1 = Trifft nicht zu, 5 = Trifft voll zu.")
 
     # Fragen in randomisierter Reihenfolge anzeigen
     answered = 0
