@@ -734,11 +734,15 @@ def main():
     Die folgenden Fragen beziehen sich auf Merkmale und Verhaltensweisen, die viele Menschen als positiv einschätzen. 
     Bitte beantworten Sie die Aussagen ehrlich und geben Sie an, in welchem Maß sie auf Sie persönlich zutreffen.
 
-    Da der Fragebogen in drei unterschiedlichen Längen verfügbar ist, können Sie selbst entscheiden, welche Variante Sie bearbeiten möchten: 
+    Der originale VIA-IS-Fragebogen umfasst **240 Fragen**. 
+    In dieser Version wurde er verkürzt, um die Bearbeitungszeit zu reduzieren, ohne den inhaltlichen Schwerpunkt zu verändern. 
+
+    Sie können selbst entscheiden, welche Variante Sie bearbeiten möchten: 
     **Kurz (48 Fragen)**, **Mittel (72 Fragen)** oder **Vollständig (96 Fragen)**.
 
     Die vollständige Version liefert ein differenzierteres und umfassenderes Bild Ihrer Charakterstärken, nimmt jedoch etwas mehr Zeit in Anspruch.
     """)
+
 
     # Sidebar
     st.sidebar.header("🔧 Einstellungen")
