@@ -7,6 +7,7 @@ from fpdf import FPDF
 import tempfile
 import base64
 from datetime import datetime
+import io
 
 # =====================
 # 🔧 Grundkonfiguration
@@ -430,164 +431,100 @@ def create_spider_chart(domain_scores):
     return fig
 
 # ======================
-# 📄 PDF GENERIERUNG (mit UTF-8 Fix)
+# 📄 PDF GENERIERUNG (komplett überarbeitet)
 # ======================
-class UnicodePDF(FPDF):
-    """FPDF Subclass die Umlaute unterstützt"""
-    
+class SimplePDF(FPDF):
     def header(self):
-        # Kopfzeile jeder Seite
         self.set_font('Arial', 'B', 12)
-        self.cell(0, 10, 'VIA Charakterstärken Bericht', 0, 1, 'C')
+        self.cell(0, 10, 'VIA Charakterstaerken Bericht', 0, 1, 'C')
         self.ln(5)
     
     def footer(self):
-        # Fußzeile jeder Seite
         self.set_y(-15)
         self.set_font('Arial', 'I', 8)
         self.cell(0, 10, f'Seite {self.page_no()}', 0, 0, 'C')
 
-def create_pdf_report(results, ranking_df, fig1, fig2, fig3):
-    """Erstellt einen detaillierten PDF-Bericht mit Top 7 Stärken"""
+def create_pdf_report(results, ranking_df):
+    """Erstellt einen einfachen PDF-Bericht ohne komplexe Formatierung"""
     
-    pdf = UnicodePDF()
+    pdf = SimplePDF()
     pdf.set_auto_page_break(auto=True, margin=15)
-    
-    # Seite 1: Einleitung und Hintergrund
     pdf.add_page()
+    
+    # Titel
     pdf.set_font('Arial', 'B', 16)
-    pdf.cell(0, 10, 'VIA Charakterstärken Bericht', 0, 1, 'C')
+    pdf.cell(0, 10, 'VIA Charakterstaerken Bericht', 0, 1, 'C')
     pdf.ln(10)
     
+    # Einleitung
     pdf.set_font('Arial', '', 12)
-    
-    # Einleitungstexte mit Umlaut-Ersetzung
-    intro_texts = [
+    intro_text = (
         'Dieser Bericht basiert auf dem VIA-IS (Values in Action Inventory of Strengths), '
-        'einem wissenschaftlichen Fragebogen zur Erfassung von 24 Charakterstaerken, '
-        'die unter sechs Tugenden eingeordnet werden koennen. Der VIA-IS wurde unter der '
-        'Leitung der Psychologen Christopher Peterson und Martin Seligman entwickelt und '
-        'wird seit 2004 eingesetzt.',
-        
-        'Die Positive Psychologie, auf der dieser Test basiert, beschaeftigt sich mit '
-        'dem optimalen menschlichen Funktionieren. Im Gegensatz zur traditionellen '
-        'Psychologie, die sich oft auf psychische Erkrankungen konzentriert, erforscht '
-        'die Positive Psychologie Faktoren, die ein "gutes Leben" ermoeglichen.',
-        
-        'Ihre persoenlichen Signaturstaerken (typischerweise 3-7 Staerken) sind diejenigen '
-        'Charaktereigenschaften, die fuer Sie besonders zentral sind und deren Ausuebung '
-        'Sie als erfuellend empfinden.'
-    ]
-    
-    for text in intro_texts:
-        pdf.multi_cell(0, 8, text)
-        pdf.ln(5)
-    
-    # Seite 2: Visualisierungen Platzhalter
-    pdf.add_page()
-    pdf.set_font('Arial', 'B', 14)
-    pdf.cell(0, 10, 'Visualisierung Ihrer Ergebnisse', 0, 1)
-    pdf.ln(5)
-    pdf.set_font('Arial', '', 12)
-    pdf.multi_cell(0, 8,
-        'Die folgenden Diagramme zeigen Ihre Charakterstaerken im Ueberblick. '
-        'Im weiteren Verlauf dieses Berichts finden Sie detaillierte Beschreibungen '
-        'Ihrer Top 7 Signaturstaerken.'
+        'einem wissenschaftlichen Fragebogen zur Erfassung von 24 Charakterstaerken. '
+        'Ihre persoenlichen Signaturstaerken sind diejenigen Charaktereigenschaften, '
+        'die fuer Sie besonders zentral sind und deren Ausuebung Sie als erfuellend empfinden.'
     )
+    pdf.multi_cell(0, 8, intro_text)
     pdf.ln(10)
-    pdf.multi_cell(0, 8, '[Platzhalter fuer Balkendiagramm]')
-    pdf.ln(5)
-    pdf.multi_cell(0, 8, '[Platzhalter fuer Spider-Diagramm]')
     
-    # Top 7 Stärken detailliert
+    # Top 7 Stärken
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(0, 10, 'Ihre Top 7 Signaturstaerken', 0, 1)
+    pdf.ln(5)
+    
     top_7_strengths = ranking_df.head(7)
     
     for index, row in top_7_strengths.iterrows():
-        pdf.add_page()
         strength_name = row['Stärke']
         rank = row['Rang']
         domain = row['Domäne']
         score = row['Wert']
         
-        pdf.set_font('Arial', 'B', 14)
-        pdf.cell(0, 10, f'{rank}. {strength_name}', 0, 1)
-        pdf.set_font('Arial', 'I', 12)
-        pdf.cell(0, 8, f'Domain: {domain} | Auspraegung: {score}', 0, 1)
-        pdf.ln(5)
+        # Stärken-Header
+        pdf.set_font('Arial', 'B', 12)
+        pdf.cell(0, 8, f'{rank}. {strength_name} ({score})', 0, 1)
+        pdf.set_font('Arial', 'I', 10)
+        pdf.cell(0, 6, f'Domain: {domain}', 0, 1)
         
-        pdf.set_font('Arial', '', 12)
+        # Beschreibung
+        pdf.set_font('Arial', '', 10)
         description = STRENGTH_DESCRIPTIONS.get(strength_name, "Beschreibung nicht verfuegbar.")
-        pdf.multi_cell(0, 8, description)
+        pdf.multi_cell(0, 6, description)
         pdf.ln(5)
-        
-        # Zusätzliche Informationen basierend auf dem Bericht
-        if strength_name in ["Kreativität", "Neugier", "Urteilsvermögen", "Liebe zum Lernen", "Weisheit"]:
-            pdf.multi_cell(0, 8, 
-                "Diese Staerke gehoert zur Tugend der Weisheit und Wissen - kognitive Staerken, "
-                "die den Erwerb und den Gebrauch von Wissen beinhalten."
-            )
-        elif strength_name in ["Authentizität", "Tapferkeit", "Ausdauer", "Enthusiasmus"]:
-            pdf.multi_cell(0, 8,
-                "Diese Staerke gehoert zur Tugend des Mutes - emotionale Staerken, die das "
-                "Erreichen von Zielen durch Ueberwindung von Barrieren ermoeglichen."
-            )
-        elif strength_name in ["Freundlichkeit", "Bindungsfähigkeit", "Soziale Intelligenz"]:
-            pdf.multi_cell(0, 8,
-                "Diese Staerke gehoert zur Tugend der Menschlichkeit - interpersonale Staerken, "
-                "die liebevolle menschliche Interaktionen ermoeglichen."
-            )
-        elif strength_name in ["Teamwork", "Fairness", "Führungsvermögen"]:
-            pdf.multi_cell(0, 8,
-                "Diese Staerke gehoert zur Tugend der Gerechtigkeit - Staerken, die das "
-                "Gemeinwesen foerdern."
-            )
-        elif strength_name in ["Vergebungsbereitschaft", "Bescheidenheit", "Vorsicht", "Selbstregulation"]:
-            pdf.multi_cell(0, 8,
-                "Diese Staerke gehoert zur Tugend der Maessigung - Staerken, die Exzessen "
-                "entgegenwirken."
-            )
-        elif strength_name in ["Sinn für das Schöne", "Dankbarkeit", "Hoffnung", "Humor", "Spiritualität"]:
-            pdf.multi_cell(0, 8,
-                "Diese Staerke gehoert zur Tugend der Transzendenz - Staerken, die uns einer "
-                "hoeheren Macht naeher bringen und Sinn stiften."
-            )
     
-    # Letzte Seite: Zusammenfassung
+    # Zusammenfassung
     pdf.add_page()
     pdf.set_font('Arial', 'B', 14)
-    pdf.cell(0, 10, 'Zusammenfassung und naechste Schritte', 0, 1)
+    pdf.cell(0, 10, 'Zusammenfassung', 0, 1)
     pdf.ln(5)
+    
     pdf.set_font('Arial', '', 12)
-    pdf.multi_cell(0, 8,
+    summary_text = (
         'Ihre Signaturstaerken sind ein wertvolles Werkzeug fuer Ihre persoenliche Entwicklung. '
-        'Sie koennen Ihnen helfen:'
+        'Nutzen Sie diese Staerken bewusst in verschiedenen Lebensbereichen:\n'
+        '\n'
+        '• Berufliche Entscheidungen, die zu Ihren Staerken passen\n'
+        '• Herausforderungen mit Ihren natuerlichen Ressourcen bewältigen\n'
+        '• Erfuellende Beziehungen gestalten\n'
+        '• Mehr Sinn und Zufriedenheit im Alltag finden'
     )
-    pdf.ln(5)
-    pdf.multi_cell(0, 8, '•  Berufliche Entscheidungen zu treffen, die zu Ihren Staerken passen')
-    pdf.multi_cell(0, 8, '•  Herausforderungen mit Ihren natuerlichen Ressourcen zu bewältigen')
-    pdf.multi_cell(0, 8, '•  Erfuellende Beziehungen zu gestalten')
-    pdf.multi_cell(0, 8, '•  Mehr Sinn und Zufriedenheit im Alltag zu finden')
-    pdf.ln(5)
-    pdf.multi_cell(0, 8,
-        'Nutzen Sie diese Staerken bewusst in verschiedenen Lebensbereichen und beobachten Sie, '
-        'wie sich dies auf Ihr Wohlbefinden auswirkt.'
-    )
+    pdf.multi_cell(0, 8, summary_text)
     
     return pdf
 
 def get_pdf_download_link(pdf, filename):
     """Erstellt einen Download-Link für das PDF"""
     try:
-        pdf_output = pdf.output(dest='S').encode('latin-1')
-    except UnicodeEncodeError:
-        # Fallback: Versuche ohne Encoding
-        pdf_output = pdf.output(dest='S')
-        if isinstance(pdf_output, str):
-            pdf_output = pdf_output.encode('utf-8')
-    
-    b64 = base64.b64encode(pdf_output).decode()
-    href = f'<a href="data:application/octet-stream;base64,{b64}" download="{filename}">📥 PDF Bericht herunterladen</a>'
-    return href
+        # Verwende Bytes-IO anstatt direkte String-Konvertierung
+        pdf_output = pdf.output()
+        b64 = base64.b64encode(pdf_output).decode()
+        href = f'<a href="data:application/pdf;base64,{b64}" download="{filename}">📥 PDF Bericht herunterladen</a>'
+        return href
+    except Exception as e:
+        # Fallback: Erstelle einen einfachen Error-Link
+        error_msg = f"Fehler beim Erstellen des PDFs: {str(e)}"
+        st.error(error_msg)
+        return f'<a href="#" style="color: red;">❌ {error_msg}</a>'
 
 # ==========================
 # 🚀 Hauptfunktion
@@ -648,9 +585,8 @@ def main():
     st.caption("Bitte beantworte alle Fragen ehrlich. 1 = Trifft nicht zu, 5 = Trifft voll zu.")
 
     # Fragen in randomisierter Reihenfolge anzeigen
-    answered = 0
+    answered_questions = 0
     for i, q in enumerate(st.session_state.randomized_questions):
-        # Nur anzeigen wenn wir innerhalb der aktuellen Fragenanzahl sind
         if i < total_questions:
             st.subheader(f"Frage {i+1} von {total_questions}")
             
@@ -663,13 +599,11 @@ def main():
                 index=(st.session_state.responses.get(q["id"], 0) - 1) if st.session_state.responses.get(q["id"]) else 0
             )
             
-            # Speichere Antwort
             if response:
                 st.session_state.responses[q["id"]] = response
-                answered += 1
+                answered_questions += 1
 
-    # Fortschritt - BEREINIGT
-    answered_questions = len([r for r in st.session_state.responses.values() if r > 0])
+    # Fortschritt
     if total_questions > 0:
         progress = min(1.0, answered_questions / total_questions)
     else:
@@ -678,8 +612,7 @@ def main():
     st.progress(progress)
     st.caption(f"Fortschritt: {answered_questions}/{total_questions} beantwortet")
 
-    # Ergebnisberechnung - SEPARAT vom PDF-Button
-    results_calculated = False
+    # Ergebnisberechnung
     if st.button("🚀 Ergebnisse berechnen", type="primary"):
         if answered_questions < total_questions:
             st.error(f"Bitte beantworte alle Fragen bevor du fortfährst. Noch {total_questions - answered_questions} Fragen offen.")
@@ -688,7 +621,6 @@ def main():
                 st.session_state.results = calculate_results(st.session_state.responses)
                 st.session_state.ranking_df = create_ranking_table(st.session_state.results)
                 st.session_state.fig1, st.session_state.fig2, st.session_state.fig3 = plot_results(st.session_state.results)
-                results_calculated = True
                 st.success("🎉 Auswertung abgeschlossen! Deine Charakterstärken wurden erfolgreich analysiert.")
 
     # Ergebnisse anzeigen wenn berechnet
@@ -713,34 +645,25 @@ def main():
             st.header("📄 PDF Bericht erstellen")
             st.info("Erstellen Sie einen detaillierten Bericht mit Ihren Top 7 Signaturstärken basierend auf dem offiziellen VIA-Handbuch.")
             
-            # PDF-Button ist jetzt AUßERHALB des Ergebnis-Blocks
             if st.button("📋 PDF Bericht generieren", type="primary", key="pdf_button"):
                 with st.spinner("Erstelle PDF-Bericht..."):
-                    pdf = create_pdf_report(
-                        st.session_state.results, 
-                        st.session_state.ranking_df, 
-                        st.session_state.fig1, 
-                        st.session_state.fig2, 
-                        st.session_state.fig3
-                    )
-                    
-                    # Download-Link anzeigen
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
-                    filename = f"VIA_Bericht_{timestamp}.pdf"
-                    
-                    st.markdown(
-                        get_pdf_download_link(pdf, filename), 
-                        unsafe_allow_html=True
-                    )
-                    st.success("✅ PDF Bericht erfolgreich generiert!")
-                    
-                    st.markdown("### 📋 Berichtsinhalt:")
-                    st.markdown("""
-                    - **Einleitung** zum VIA-IS und Positive Psychologie
-                    - **Visualisierungen** Ihrer Ergebnisse
-                    - **Detaillierte Beschreibungen** Ihrer Top 7 Signaturstärken
-                    - **Zusammenfassung** und Empfehlungen für die Anwendung
-                    """)
+                    try:
+                        pdf = create_pdf_report(
+                            st.session_state.results, 
+                            st.session_state.ranking_df
+                        )
+                        
+                        timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+                        filename = f"VIA_Bericht_{timestamp}.pdf"
+                        
+                        st.markdown(
+                            get_pdf_download_link(pdf, filename), 
+                            unsafe_allow_html=True
+                        )
+                        st.success("✅ PDF Bericht erfolgreich generiert!")
+                        
+                    except Exception as e:
+                        st.error(f"Fehler beim Erstellen des PDFs: {str(e)}")
 
         with tab5:
             csv_data = st.session_state.ranking_df.to_csv(index=False).encode("utf-8")
