@@ -13,11 +13,10 @@ import io
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Image
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
 from reportlab.lib.units import inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.utils import ImageReader
 
 # =====================
 # 🔧 Grundkonfiguration
@@ -158,7 +157,7 @@ CHARACTER_STRENGTHS = {
     ]},
     "Führungsvermögen": {"domain": "Gerechtigkeit", "color": "#76B7B2", "questions": [
         "Ich kann Gruppen gut motivieren und leiten",
-        "In Leitungsrollen fühle ich sich wohl",
+        "In Leitungsrollen fühle ich mich wohl",
         "Ich organisiere gerne Aktivitäten für Gruppen",
         "Andere folgen mir freiwillig"
     ]},
@@ -230,7 +229,7 @@ STRENGTH_DESCRIPTIONS = {
     
     "Liebe zum Lernen": "Wissbegierige Menschen zeichnen sich durch eine große Begeisterung für das Lernen neuer Fertigkeiten und Wissensinhalte aus. Sie lieben es, neue Dinge zu lernen und sind bemüht, sich ständig weiterzubilden und zu entwickeln. Dabei wird das ständige Lernen als eine Herausforderung betrachtet.",
     
-    "Weisheit": "Weise Menschen sind weitläufig und tiefsinnig. Sie haben einen guten Überblick und eine reife Sichtweise des Lebens. Ausserdem besitzen sie die Fähigkeit, eine sinnvolle Bilanz über das Leben ziehen zu können. Diese Koordination des geheimen Wissens und der gemachten Erfahrungen eines Menschen trägt zu seinem Wohlbefinden bei.",
+    "Weisheit": "Weise Menschen sind weitsichtig und tiefsinnig. Sie haben einen guten Überblick und eine reife Sichtweise des Lebens. Ausserdem besitzen sie die Fähigkeit, eine sinnvolle Bilanz über das Leben ziehen zu können. Diese Koordination des gelernten Wissens und der gemachten Erfahrungen eines Menschen trägt zu seinem Wohlbefinden bei.",
     
     "Authentizität": "Authentische Menschen sind sich selbst und ihren Mitmenschen gegenüber aufrichtig und ehrlich. Sie halten ihre Versprechen und bleiben ihren Prinzipien treu. Sie legen Wert darauf, die Realität unverfälscht wahrzunehmen. Authentizität befähigt Menschen für sich selbst die Verantwortung zu übernehmen.",
     
@@ -266,7 +265,7 @@ STRENGTH_DESCRIPTIONS = {
     
     "Hoffnung": "Hoffnungsvolle Menschen haben grundsätzlich eine positive Einstellung gegenüber der Zukunft. Sie sind optimistisch und zuversichtlich und können auch dann etwas positiv noch sehen, wenn es für andere negativ erscheint. Sie hoffen das Beste für die Zukunft und tun ihr Möglichstes, um ihre Ziele zu erreichen.",
     
-    "Humor": "Humorvolle Menschen haben gerne und bringen andere Menschen gerne zum Lächeln oder zum Lachen. Sie versuchen ihre Freunde und Freundinnen aufzuheitern, wenn diese in einer bedrückten Stimmung sind. Menschen mit einem ausgeprägten Sinn für Humor versuchen in allen möglichen Situationen Spass zu haben.",
+    "Humor": "Humorvolle Menschen lachen gerne und bringen andere Menschen gerne zum Lächeln oder zum Lachen. Sie versuchen ihre Freunde und Freundinnen aufzuheitern, wenn diese in einer bedrückten Stimmung sind. Menschen mit einem ausgeprägten Sinn für Humor versuchen in allen möglichen Situationen Spass zu haben.",
     
     "Spiritualität": "Spirituelle Menschen haben kohärente Überzeugungen über den höheren Sinn und Zweck des Universums. Sie glauben an eine übermächtige Macht bzw. an einen Gott. Ihre religiösen Überzeugungen beeinflussen ihr Denken, Handeln und Fühlen und können auch in schwierigen Zeiten eine Quelle des Trostes und der Kraft sein."
 }
@@ -441,35 +440,69 @@ def create_spider_chart(domain_scores):
     return fig
 
 # ======================
-# 📄 PDF GENERIERUNG mit ReportLab und Grafiken (OHNE KALEIDO)
+# 📄 PDF GENERIERUNG - Professionell nach VIA-Vorlage
 # ======================
-def create_pdf_report(results, ranking_df, fig1, fig2, fig3):
-    """Erstellt einen PDF-Bericht mit ReportLab inklusive Grafiken"""
+class ViaPDFTemplate(SimpleDocTemplate):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+    def afterFlowable(self, flowable):
+        """Wasserzeichen auf jeder Seite"""
+        if hasattr(flowable, 'canvas'):
+            canvas = flowable.canvas
+            canvas.saveState()
+            
+            # Dezentes Wasserzeichen
+            canvas.setFont('Helvetica-Oblique', 40)
+            canvas.setFillColorRGB(0.9, 0.9, 0.95)  # Sehr helles Blau
+            canvas.rotate(45)
+            canvas.drawCentredString(300, 100, "VIA-IS")
+            
+            # Blaue Kopfzeile
+            canvas.setFillColorRGB(0.12, 0.47, 0.71)  # VIA Blau
+            canvas.rect(0, self.pagesize[1] - 30, self.pagesize[0], 30, fill=1)
+            
+            # Footer mit Copyright
+            canvas.setFillColorRGB(0.4, 0.4, 0.4)
+            canvas.setFont('Helvetica', 8)
+            canvas.drawString(40, 20, f"© {datetime.now().year} VIA-IS Charakterstärken | Erstellt am: {datetime.now().strftime('%d.%m.%Y')}")
+            canvas.drawRightString(self.pagesize[0] - 40, 20, f"Seite {self.page}")
+            
+            canvas.restoreState()
+
+def create_professional_pdf_report(results, ranking_df):
+    """Erstellt einen professionellen PDF-Bericht im VIA-Stil"""
     
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, 
-                          rightMargin=72, leftMargin=72, 
-                          topMargin=72, bottomMargin=72)
+    doc = ViaPDFTemplate(buffer, pagesize=A4, 
+                        rightMargin=40, leftMargin=40, 
+                        topMargin=60, bottomMargin=50)
     
     styles = getSampleStyleSheet()
     
-    # Custom Styles
+    # Professionelle Styles im VIA-Stil
     styles.add(ParagraphStyle(
-        name='CustomTitle',
+        name='ViaTitle',
         parent=styles['Heading1'],
         fontSize=16,
-        spaceAfter=30,
+        spaceAfter=24,
         alignment=1,
-        textColor='#1f77b4'
+        textColor='#1f77b4',
+        fontName='Helvetica-Bold'
     ))
     
     styles.add(ParagraphStyle(
-        name='CustomHeading',
+        name='SectionHeader',
         parent=styles['Heading2'],
         fontSize=14,
         spaceAfter=12,
-        spaceBefore=12,
-        textColor='#2e86ab'
+        spaceBefore=20,
+        textColor='#1f77b4',
+        fontName='Helvetica-Bold',
+        leftIndent=10,
+        borderLeft=3,
+        borderColor='#1f77b4',
+        borderPadding=8
     ))
     
     styles.add(ParagraphStyle(
@@ -477,162 +510,205 @@ def create_pdf_report(results, ranking_df, fig1, fig2, fig3):
         parent=styles['Heading3'],
         fontSize=12,
         spaceAfter=6,
-        spaceBefore=12,
-        textColor='#1f77b4'
+        spaceBefore=15,
+        textColor='#2e86ab',
+        fontName='Helvetica-Bold',
+        backColor='#f0f8ff',
+        borderPadding=6
     ))
     
     styles.add(ParagraphStyle(
-        name='BodyTextSmall',
+        name='DomainStyle',
+        parent=styles['Italic'],
+        fontSize=10,
+        spaceAfter=8,
+        textColor='#666666'
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='BodyEnhanced',
         parent=styles['BodyText'],
         fontSize=10,
-        spaceAfter=6,
+        spaceAfter=8,
         leading=14
     ))
+    
+    styles.add(ParagraphStyle(
+        name='HighlightBox',
+        parent=styles['BodyText'],
+        fontSize=10,
+        backColor='#f8f9fa',
+        borderColor='#1f77b4',
+        borderWidth=1,
+        borderPadding=12,
+        spaceAfter=12,
+        spaceBefore=12
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='RankingItem',
+        parent=styles['BodyText'],
+        fontSize=10,
+        leftIndent=0,
+        spaceAfter=4,
+        backColor='#ffffff'
+    ))
 
-    # Content sammeln
     content = []
     
-    # Titel
-    content.append(Paragraph('VIA Charakterstärken Bericht', styles['CustomTitle']))
-    content.append(Spacer(1, 0.2*inch))
-    content.append(Paragraph(f'Erstellt am: {datetime.now().strftime("%d.%m.%Y %H:%M")}', styles['Italic']))
+    # ===== TITELSEITE =====
+    content.append(Paragraph('VIA-IS CHARAKTERSTÄRKEN BERICHT', styles['ViaTitle']))
     content.append(Spacer(1, 0.3*inch))
     
-    # Einleitung
+    # Untertitel
+    content.append(Paragraph('Wissenschaftliche Auswertung Ihrer persönlichen Stärken', styles['BodyEnhanced']))
+    content.append(Spacer(1, 0.4*inch))
+    
+    # Erstellt am
+    content.append(Paragraph(f'Erstellt am: {datetime.now().strftime("%d. %B %Y")}', styles['BodyEnhanced']))
+    content.append(Spacer(1, 0.6*inch))
+    
+    # Einleitungstext im VIA-Stil
     intro_text = (
         'Dieser Bericht basiert auf dem VIA-IS (Values in Action Inventory of Strengths), '
         'einem wissenschaftlichen Fragebogen zur Erfassung von 24 Charakterstärken. '
-        'Ihre persönlichen Signaturstärken sind diejenigen Charaktereigenschaften, '
-        'die für Sie besonders zentral sind und deren Ausübung Sie als erfüllend empfinden.'
+        'Der VIA-IS wurde unter der Leitung der Psychologen Christopher Peterson und '
+        'Martin Seligman entwickelt und wird seit 2004 international eingesetzt.'
     )
-    content.append(Paragraph(intro_text, styles['BodyText']))
+    content.append(Paragraph(intro_text, styles['BodyEnhanced']))
     content.append(Spacer(1, 0.3*inch))
     
-    # Visualisierungen
-    content.append(Paragraph('Visualisierung Ihrer Ergebnisse', styles['CustomHeading']))
-    content.append(Spacer(1, 0.2*inch))
+    # Wichtiger Hinweis
+    highlight_text = (
+        'Ihre Signaturstärken (typischerweise die ersten 3-7 Stärken) sind jene '
+        'Charaktereigenschaften, die für Sie besonders zentral sind und deren Ausübung '
+        'Sie als besonders erfüllend empfinden.'
+    )
+    content.append(Paragraph(highlight_text, styles['HighlightBox']))
     
-    # Balkendiagramm als Bild einfügen - OHNE KALEIDO
-    try:
-        # Verwende plotly.io.to_image ohne Kaleido
-        import plotly.io as pio
-        
-        # Temporär den Titel entfernen für bessere Darstellung im PDF
-        fig1_no_title = fig1.update_layout(
-            title=None, 
-            margin=dict(t=30, b=60, l=60, r=30),
-            showlegend=True,
-            width=800,
-            height=500
-        )
-        
-        # Export als PNG ohne Kaleido
-        img_bytes = pio.to_image(fig1_no_title, format='png', scale=1)
-        img_buffer = io.BytesIO(img_bytes)
-        img = ImageReader(img_buffer)
-        
-        content.append(Paragraph('Charakterstärken - Ranking', styles['StrengthHeader']))
-        content.append(Spacer(1, 0.1*inch))
-        content.append(Image(img, width=6*inch, height=3.75*inch))
-        content.append(Spacer(1, 0.2*inch))
-        st.success("✅ Balkendiagramm erfolgreich ins PDF eingefügt")
-    except Exception as e:
-        content.append(Paragraph('Balkendiagramm konnte nicht geladen werden', styles['Italic']))
-        st.warning(f"Balkendiagramm konnte nicht exportiert werden: {e}")
-    
-    # Spider-Chart als Bild einfügen - OHNE KALEIDO
-    try:
-        import plotly.io as pio
-        
-        # Temporär den Titel entfernen
-        fig3_no_title = fig3.update_layout(
-            title=None, 
-            margin=dict(t=30, b=30, l=30, r=30),
-            width=600,
-            height=500
-        )
-        
-        # Export als PNG ohne Kaleido
-        img_bytes = pio.to_image(fig3_no_title, format='png', scale=1)
-        img_buffer = io.BytesIO(img_bytes)
-        img = ImageReader(img_buffer)
-        
-        content.append(Paragraph('Charakterstärken-Profil nach Domänen', styles['StrengthHeader']))
-        content.append(Spacer(1, 0.1*inch))
-        content.append(Image(img, width=5*inch, height=4*inch))
-        content.append(Spacer(1, 0.2*inch))
-        st.success("✅ Spider-Diagramm erfolgreich ins PDF eingefügt")
-    except Exception as e:
-        content.append(Paragraph('Spider-Diagramm konnte nicht geladen werden', styles['Italic']))
-        st.warning(f"Spider-Diagramm konnte nicht exportiert werden: {e}")
-    
-    # Seitenumbruch für Top 7 Stärken
     content.append(PageBreak())
     
-    # Top 7 Stärken
-    content.append(Paragraph('Ihre Top 7 Signaturstärken', styles['CustomHeading']))
+    # ===== RANGLISTE =====
+    content.append(Paragraph('Rangliste Ihrer Charakterstärken', styles['SectionHeader']))
     content.append(Spacer(1, 0.2*inch))
     
-    top_7_strengths = ranking_df.head(7)
+    # Erklärender Text
+    explanation = (
+        'Die folgende Liste zeigt Ihre 24 Charakterstärken in der Reihenfolge ihrer Ausprägung. '
+        'Die Rangreihenfolge beruht auf einem Vergleich mit Ihrer Normgruppe und dem '
+        'Verhältnis Ihrer Stärken zueinander.'
+    )
+    content.append(Paragraph(explanation, styles['BodyEnhanced']))
+    content.append(Spacer(1, 0.3*inch))
     
+    # Top 10 Stärken als formatierte Liste
+    top_strengths = ranking_df.head(10)
+    for index, row in top_strengths.iterrows():
+        rank = row['Rang']
+        strength = row['Stärke']
+        score = row['Wert']
+        domain = row['Domäne']
+        
+        # Farbe basierend auf Rang für bessere Visualisierung
+        if rank <= 3:
+            rank_style = "<b>"
+        elif rank <= 7:
+            rank_style = ""
+        else:
+            rank_style = "<i>"
+            
+        strength_text = f'{rank_style}{rank}. {strength} - {score} (Domäne: {domain})'
+        if rank <= 3:
+            strength_text += "</b>"
+        elif rank > 7:
+            strength_text += "</i>"
+            
+        content.append(Paragraph(strength_text, styles['RankingItem']))
+    
+    content.append(Spacer(1, 0.3*inch))
+    content.append(Paragraph('... und die weiteren Stärken', styles['BodyEnhanced']))
+    
+    # Restliche Stärken
+    remaining_strengths = ranking_df.iloc[10:]
+    for index, row in remaining_strengths.iterrows():
+        strength_text = f"{row['Rang']}. {row['Stärke']} - {row['Wert']}"
+        content.append(Paragraph(strength_text, styles['RankingItem']))
+    
+    content.append(PageBreak())
+    
+    # ===== DETAILIERTE TOP 7 STÄRKEN =====
+    content.append(Paragraph('Ihre Top 7 Signaturstärken im Detail', styles['SectionHeader']))
+    content.append(Spacer(1, 0.2*inch))
+    
+    intro_detail = (
+        'Im Folgenden finden Sie detaillierte Beschreibungen Ihrer wichtigsten '
+        'Signaturstärken basierend auf der wissenschaftlichen Forschung der '
+        'Positiven Psychologie (Peterson & Seligman, 2004).'
+    )
+    content.append(Paragraph(intro_detail, styles['BodyEnhanced']))
+    content.append(Spacer(1, 0.3*inch))
+    
+    top_7_strengths = ranking_df.head(7)
     for index, row in top_7_strengths.iterrows():
         strength_name = row['Stärke']
         rank = row['Rang']
         domain = row['Domäne']
         score = row['Wert']
         
-        # Stärken-Header
+        # Stärken-Header mit Rang und Domäne
         strength_header = f'{rank}. {strength_name} - {score}'
         content.append(Paragraph(strength_header, styles['StrengthHeader']))
         
         # Domäne
         domain_text = f'Domäne: {domain}'
-        content.append(Paragraph(domain_text, styles['Italic']))
+        content.append(Paragraph(domain_text, styles['DomainStyle']))
         
         # Beschreibung
         description = STRENGTH_DESCRIPTIONS.get(strength_name, "Beschreibung nicht verfügbar.")
-        content.append(Paragraph(description, styles['BodyTextSmall']))
-        content.append(Spacer(1, 0.15*inch))
+        content.append(Paragraph(description, styles['BodyEnhanced']))
+        
+        content.append(Spacer(1, 0.2*inch))
     
-    # Seitenumbruch für Zusammenfassung
     content.append(PageBreak())
     
-    # Zusammenfassung
-    content.append(Paragraph('Zusammenfassung und Empfehlungen', styles['CustomHeading']))
+    # ===== INTERPRETATIONSHINWEISE =====
+    content.append(Paragraph('Hinweise zur Interpretation', styles['SectionHeader']))
     content.append(Spacer(1, 0.2*inch))
     
-    summary_text = (
-        'Ihre Signaturstärken sind ein wertvolles Werkzeug für Ihre persönliche Entwicklung. '
-        'Sie können Ihnen helfen, mehr Zufriedenheit und Sinn in verschiedenen Lebensbereichen zu finden.'
-    )
-    content.append(Paragraph(summary_text, styles['BodyText']))
-    content.append(Spacer(1, 0.2*inch))
-    
-    # Empfehlungen
-    content.append(Paragraph('Wie Sie Ihre Stärken nutzen können:', styles['StrengthHeader']))
-    
-    recommendations = [
-        "Berufliche Entscheidungen treffen, die zu Ihren Stärken passen",
-        "Herausforderungen mit Ihren natürlichen Ressourcen bewältigen",
-        "Erfüllende Beziehungen gestalten",
-        "Mehr Sinn und Zufriedenheit im Alltag finden",
-        "Persönliche Entwicklungsziele setzen, die Ihre Stärken einbeziehen",
-        "Stress besser bewältigen durch den Einsatz Ihrer Charakterstärken",
-        "Teamarbeit und Zusammenarbeit durch komplementäre Stärken verbessern"
+    interpretation_texts = [
+        "Ihre Rangreihenfolge spiegelt sowohl Ihre persönlichen Präferenzen als auch den Vergleich mit Ihrer Normgruppe wider.",
+        "Signaturstärken (typischerweise Rang 1-7) sind jene Stärken, die Sie besonders charakterisieren und deren Ausübung Sie als erfüllend empfinden.",
+        "Die Ausprägungen Ihrer Charakterstärken bleiben im Erwachsenenalter in der Regel relativ stabil.",
+        "Niedrigere Ränge sind nicht als Schwächen zu interpretieren, sondern als weniger ausgeprägte Stärken.",
+        "Die regelmäßige Anwendung Ihrer Signaturstärken kann zu mehr Zufriedenheit und Wohlbefinden führen."
     ]
     
-    for rec in recommendations:
-        content.append(Paragraph(f"• {rec}", styles['BodyTextSmall']))
-        content.append(Spacer(1, 0.05*inch))
+    for text in interpretation_texts:
+        content.append(Paragraph(f"• {text}", styles['BodyEnhanced']))
+        content.append(Spacer(1, 0.1*inch))
     
+    content.append(Spacer(1, 0.3*inch))
+    
+    # ===== LITERATURHINWEISE =====
+    content.append(Paragraph('Wissenschaftliche Grundlage', styles['SectionHeader']))
     content.append(Spacer(1, 0.2*inch))
     
-    abschluss_text = (
-        'Nutzen Sie diese Stärken bewusst in verschiedenen Lebensbereichen und beobachten Sie, '
-        'wie sich dies auf Ihr Wohlbefinden und Ihre Zufriedenheit auswirkt. Die regelmäßige '
-        'Anwendung Ihrer Signaturstärken kann zu mehr Freude, Engagement und Sinn im Leben führen.'
+    literature_text = (
+        'Dieser Bericht basiert auf der wissenschaftlichen Forschung der Positiven Psychologie. '
+        'Weiterführende Informationen finden Sie unter: www.viacharacter.org'
     )
-    content.append(Paragraph(abschluss_text, styles['BodyText']))
+    content.append(Paragraph(literature_text, styles['BodyEnhanced']))
+    
+    references = [
+        "Peterson, C. & Seligman, M.E.P. (2004). Character strengths and virtues: A handbook and classification. Oxford University Press.",
+        "Ruch, W., Proyer, R. T., Harzer, C., Park, N., Peterson, C. & Seligman, M. E. (2010). Values in Action Inventory of Strengths (VIA-IS): Adaptation and validation of the German version. Journal of Individual Differences, 31(3), 138-149.",
+        "Seligman, M. E. P. (2002). Authentic Happiness. Using the New Positive Psychology to Realize Your Potential for Lasting Fulfillment. Free Press."
+    ]
+    
+    content.append(Spacer(1, 0.2*inch))
+    for ref in references:
+        content.append(Paragraph(f"• {ref}", styles['BodyEnhanced']))
+        content.append(Spacer(1, 0.05*inch))
     
     # PDF erstellen
     doc.build(content)
@@ -763,17 +839,14 @@ def main():
 
         with tab4:
             st.header("📄 PDF Bericht erstellen")
-            st.info("Erstellen Sie einen detaillierten Bericht mit Visualisierungen und Ihren Top 7 Signaturstärken.")
+            st.info("Erstellen Sie einen professionellen Bericht im VIA-Stil mit wissenschaftlicher Fundierung.")
             
-            if st.button("📋 PDF Bericht generieren", type="primary", key="pdf_button"):
-                with st.spinner("Erstelle PDF-Bericht mit Grafiken..."):
+            if st.button("📋 Professionellen PDF Bericht generieren", type="primary", key="pdf_button"):
+                with st.spinner("Erstelle professionellen PDF-Bericht..."):
                     try:
-                        pdf_buffer = create_pdf_report(
+                        pdf_buffer = create_professional_pdf_report(
                             st.session_state.results, 
-                            st.session_state.ranking_df,
-                            st.session_state.fig1,
-                            st.session_state.fig2, 
-                            st.session_state.fig3
+                            st.session_state.ranking_df
                         )
                         
                         timestamp = datetime.now().strftime("%Y%m%d_%H%M")
@@ -783,7 +856,7 @@ def main():
                             get_pdf_download_link(pdf_buffer, filename), 
                             unsafe_allow_html=True
                         )
-                        st.success("✅ PDF Bericht mit Grafiken erfolgreich generiert!")
+                        st.success("✅ Professioneller PDF Bericht erfolgreich generiert!")
                         
                     except Exception as e:
                         st.error(f"Fehler beim Erstellen des PDFs: {str(e)}")
