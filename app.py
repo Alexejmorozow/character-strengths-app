@@ -141,7 +141,7 @@ CHARACTER_STRENGTHS = {
     ]},
     "Fairness": {"domain": "⚖️ Gerechtigkeit", "color": "#76B7B2", "questions": [
         "Ich behandle alle Menschen gleich, unabhängig von Herkunft oder Status",
-        "Bei Entscheidungen lasse ich mich nicht von Sympathien leiten",
+        "Bei Entscheidungen lasse ich sich nicht von Sympathien leiten",
         "Gerechtigkeit ist mir ein wichtiges Anliegen",
         "Ich setze mich für faire Behandlung ein"
     ]},
@@ -654,69 +654,78 @@ def main():
     st.progress(progress)
     st.caption(f"Fortschritt: {answered_questions}/{total_questions} beantwortet")
 
-    # Ergebnisberechnung
+    # Ergebnisberechnung - SEPARAT vom PDF-Button
+    results_calculated = False
     if st.button("🚀 Ergebnisse berechnen", type="primary"):
         if answered_questions < total_questions:
             st.error(f"Bitte beantworte alle Fragen bevor du fortfährst. Noch {total_questions - answered_questions} Fragen offen.")
-            return
+        else:
+            with st.spinner("Berechne Ergebnisse..."):
+                st.session_state.results = calculate_results(st.session_state.responses)
+                st.session_state.ranking_df = create_ranking_table(st.session_state.results)
+                st.session_state.fig1, st.session_state.fig2, st.session_state.fig3 = plot_results(st.session_state.results)
+                results_calculated = True
+                st.success("🎉 Auswertung abgeschlossen! Deine Charakterstärken wurden erfolgreich analysiert.")
 
-        with st.spinner("Berechne Ergebnisse..."):
-            results = calculate_results(st.session_state.responses)
-            ranking_df = create_ranking_table(results)
-            fig1, fig2, fig3 = plot_results(results)
+    # Ergebnisse anzeigen wenn berechnet
+    if hasattr(st.session_state, 'results'):
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Rangliste", "📈 Visualisierung", "🕷️ Spider-Diagramm", "📄 PDF Bericht", "💾 Export"])
 
-            tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Rangliste", "📈 Visualisierung", "🕷️ Spider-Diagramm", "📄 PDF Bericht", "💾 Export"])
+        with tab1:
+            st.dataframe(st.session_state.ranking_df, use_container_width=True)
 
-            with tab1:
-                st.dataframe(ranking_df, use_container_width=True)
+        with tab2:
+            c1, c2 = st.columns(2)
+            with c1:
+                st.plotly_chart(st.session_state.fig1, use_container_width=True)
+            with c2:
+                st.plotly_chart(st.session_state.fig2, use_container_width=True)
 
-            with tab2:
-                c1, c2 = st.columns(2)
-                with c1:
-                    st.plotly_chart(fig1, use_container_width=True)
-                with c2:
-                    st.plotly_chart(fig2, use_container_width=True)
+        with tab3:
+            st.plotly_chart(st.session_state.fig3, use_container_width=True)
+            st.info("💡 Das Spider-Diagramm zeigt Ihre durchschnittliche Ausprägung in den sechs Charakterstärken-Domänen.")
 
-            with tab3:
-                st.plotly_chart(fig3, use_container_width=True)
-                st.info("💡 Das Spider-Diagramm zeigt Ihre durchschnittliche Ausprägung in den sechs Charakterstärken-Domänen.")
+        with tab4:
+            st.header("📄 PDF Bericht erstellen")
+            st.info("Erstellen Sie einen detaillierten Bericht mit Ihren Top 7 Signaturstärken basierend auf dem offiziellen VIA-Handbuch.")
+            
+            # PDF-Button ist jetzt AUßERHALB des Ergebnis-Blocks
+            if st.button("📋 PDF Bericht generieren", type="primary", key="pdf_button"):
+                with st.spinner("Erstelle PDF-Bericht..."):
+                    pdf = create_pdf_report(
+                        st.session_state.results, 
+                        st.session_state.ranking_df, 
+                        st.session_state.fig1, 
+                        st.session_state.fig2, 
+                        st.session_state.fig3
+                    )
+                    
+                    # Download-Link anzeigen
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+                    filename = f"VIA_Bericht_{timestamp}.pdf"
+                    
+                    st.markdown(
+                        get_pdf_download_link(pdf, filename), 
+                        unsafe_allow_html=True
+                    )
+                    st.success("✅ PDF Bericht erfolgreich generiert!")
+                    
+                    st.markdown("### 📋 Berichtsinhalt:")
+                    st.markdown("""
+                    - **Einleitung** zum VIA-IS und Positive Psychologie
+                    - **Visualisierungen** Ihrer Ergebnisse
+                    - **Detaillierte Beschreibungen** Ihrer Top 7 Signaturstärken
+                    - **Zusammenfassung** und Empfehlungen für die Anwendung
+                    """)
 
-            with tab4:
-                st.header("📄 PDF Bericht erstellen")
-                st.info("Erstellen Sie einen detaillierten Bericht mit Ihren Top 7 Signaturstärken basierend auf dem offiziellen VIA-Handbuch.")
-                
-                if st.button("📋 PDF Bericht generieren", type="primary"):
-                    with st.spinner("Erstelle PDF-Bericht..."):
-                        pdf = create_pdf_report(results, ranking_df, fig1, fig2, fig3)
-                        
-                        # Download-Link anzeigen
-                        timestamp = datetime.now().strftime("%Y%m%d_%H%M")
-                        filename = f"VIA_Bericht_{timestamp}.pdf"
-                        
-                        st.markdown(
-                            get_pdf_download_link(pdf, filename), 
-                            unsafe_allow_html=True
-                        )
-                        st.success("✅ PDF Bericht erfolgreich generiert!")
-                        
-                        st.markdown("### 📋 Berichtsinhalt:")
-                        st.markdown("""
-                        - **Einleitung** zum VIA-IS und Positive Psychologie
-                        - **Visualisierungen** Ihrer Ergebnisse
-                        - **Detaillierte Beschreibungen** Ihrer Top 7 Signaturstärken
-                        - **Zusammenfassung** und Empfehlungen für die Anwendung
-                        """)
-
-            with tab5:
-                csv_data = ranking_df.to_csv(index=False).encode("utf-8")
-                st.download_button(
-                    "📥 Ergebnisse als CSV herunterladen",
-                    data=csv_data,
-                    file_name="via_charakterstaerken_ergebnisse.csv",
-                    mime="text/csv"
-                )
-
-            st.success("🎉 Auswertung abgeschlossen! Deine Charakterstärken wurden erfolgreich analysiert.")
+        with tab5:
+            csv_data = st.session_state.ranking_df.to_csv(index=False).encode("utf-8")
+            st.download_button(
+                "📥 Ergebnisse als CSV herunterladen",
+                data=csv_data,
+                file_name="via_charakterstaerken_ergebnisse.csv",
+                mime="text/csv"
+            )
 
 if __name__ == "__main__":
     main()
