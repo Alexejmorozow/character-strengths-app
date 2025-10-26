@@ -13,10 +13,11 @@ import io
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Image
 from reportlab.lib.units import inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.utils import ImageReader
 
 # =====================
 # 🔧 Grundkonfiguration
@@ -440,10 +441,10 @@ def create_spider_chart(domain_scores):
     return fig
 
 # ======================
-# 📄 PDF GENERIERUNG mit ReportLab
+# 📄 PDF GENERIERUNG mit ReportLab und Grafiken
 # ======================
-def create_pdf_report(results, ranking_df):
-    """Erstellt einen PDF-Bericht mit ReportLab (perfekte UTF-8 Unterstützung)"""
+def create_pdf_report(results, ranking_df, fig1, fig2, fig3):
+    """Erstellt einen PDF-Bericht mit ReportLab inklusive Grafiken"""
     
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, 
@@ -452,13 +453,13 @@ def create_pdf_report(results, ranking_df):
     
     styles = getSampleStyleSheet()
     
-    # Custom Styles für bessere Lesbarkeit
+    # Custom Styles
     styles.add(ParagraphStyle(
         name='CustomTitle',
         parent=styles['Heading1'],
         fontSize=16,
         spaceAfter=30,
-        alignment=1,  # Center
+        alignment=1,
         textColor='#1f77b4'
     ))
     
@@ -481,58 +482,68 @@ def create_pdf_report(results, ranking_df):
     ))
     
     styles.add(ParagraphStyle(
-        name='DomainStyle',
-        parent=styles['Italic'],
-        fontSize=10,
-        spaceAfter=12,
-        textColor='#666666'
-    ))
-    
-    styles.add(ParagraphStyle(
         name='BodyTextSmall',
         parent=styles['BodyText'],
         fontSize=10,
         spaceAfter=6,
         leading=14
     ))
-    
+
     # Content sammeln
     content = []
     
     # Titel
     content.append(Paragraph('VIA Charakterstärken Bericht', styles['CustomTitle']))
     content.append(Spacer(1, 0.2*inch))
-    
-    # Datum
     content.append(Paragraph(f'Erstellt am: {datetime.now().strftime("%d.%m.%Y %H:%M")}', styles['Italic']))
     content.append(Spacer(1, 0.3*inch))
     
     # Einleitung
     intro_text = (
         'Dieser Bericht basiert auf dem VIA-IS (Values in Action Inventory of Strengths), '
-        'einem wissenschaftlichen Fragebogen zur Erfassung von 24 Charakterstärken, '
-        'die unter sechs Tugenden eingeordnet werden können. Der VIA-IS wurde unter der '
-        'Leitung der Psychologen Christopher Peterson und Martin Seligman entwickelt.'
+        'einem wissenschaftlichen Fragebogen zur Erfassung von 24 Charakterstärken. '
+        'Ihre persönlichen Signaturstärken sind diejenigen Charaktereigenschaften, '
+        'die für Sie besonders zentral sind und deren Ausübung Sie als erfüllend empfinden.'
     )
     content.append(Paragraph(intro_text, styles['BodyText']))
-    content.append(Spacer(1, 0.1*inch))
-    
-    intro_text2 = (
-        'Die Positive Psychologie, auf der dieser Test basiert, beschäftigt sich mit '
-        'dem optimalen menschlichen Funktionieren. Im Gegensatz zur traditionellen '
-        'Psychologie, die sich oft auf psychische Erkrankungen konzentriert, erforscht '
-        'die Positive Psychologie Faktoren, die ein "gutes Leben" ermöglichen.'
-    )
-    content.append(Paragraph(intro_text2, styles['BodyText']))
-    content.append(Spacer(1, 0.1*inch))
-    
-    intro_text3 = (
-        'Ihre persönlichen Signaturstärken (typischerweise 3-7 Stärken) sind diejenigen '
-        'Charaktereigenschaften, die für Sie besonders zentral sind und deren Ausübung '
-        'Sie als erfüllend empfinden.'
-    )
-    content.append(Paragraph(intro_text3, styles['BodyText']))
     content.append(Spacer(1, 0.3*inch))
+    
+    # Visualisierungen
+    content.append(Paragraph('Visualisierung Ihrer Ergebnisse', styles['CustomHeading']))
+    content.append(Spacer(1, 0.2*inch))
+    
+    # Balkendiagramm als Bild einfügen
+    try:
+        # Fig1 (Balkendiagramm) als PNG exportieren
+        img_buffer = io.BytesIO()
+        fig1.write_image(img_buffer, format='png', width=800, height=500)
+        img_buffer.seek(0)
+        img = ImageReader(img_buffer)
+        content.append(Paragraph('Charakterstärken - Ranking', styles['StrengthHeader']))
+        content.append(Spacer(1, 0.1*inch))
+        content.append(Image(img, width=6*inch, height=3.75*inch))
+        content.append(Spacer(1, 0.2*inch))
+    except Exception as e:
+        content.append(Paragraph('Balkendiagramm konnte nicht geladen werden', styles['Italic']))
+        print(f"Fehler beim Balkendiagramm: {e}")
+    
+    # Spider-Chart als Bild einfügen
+    try:
+        # Fig3 (Spider-Chart) als PNG exportieren
+        img_buffer = io.BytesIO()
+        fig3.write_image(img_buffer, format='png', width=600, height=500)
+        img_buffer.seek(0)
+        img = ImageReader(img_buffer)
+        content.append(Paragraph('Charakterstärken-Profil nach Domänen', styles['StrengthHeader']))
+        content.append(Spacer(1, 0.1*inch))
+        content.append(Image(img, width=5*inch, height=4*inch))
+        content.append(Spacer(1, 0.2*inch))
+    except Exception as e:
+        content.append(Paragraph('Spider-Diagramm konnte nicht geladen werden', styles['Italic']))
+        print(f"Fehler beim Spider-Diagramm: {e}")
+    
+    # Seitenumbruch für Top 7 Stärken
+    content.append(PageBreak())
     
     # Top 7 Stärken
     content.append(Paragraph('Ihre Top 7 Signaturstärken', styles['CustomHeading']))
@@ -552,7 +563,7 @@ def create_pdf_report(results, ranking_df):
         
         # Domäne
         domain_text = f'Domäne: {domain}'
-        content.append(Paragraph(domain_text, styles['DomainStyle']))
+        content.append(Paragraph(domain_text, styles['Italic']))
         
         # Beschreibung
         description = STRENGTH_DESCRIPTIONS.get(strength_name, "Beschreibung nicht verfügbar.")
@@ -728,14 +739,17 @@ def main():
 
         with tab4:
             st.header("📄 PDF Bericht erstellen")
-            st.info("Erstellen Sie einen detaillierten Bericht mit Ihren Top 7 Signaturstärken basierend auf dem offiziellen VIA-Handbuch.")
+            st.info("Erstellen Sie einen detaillierten Bericht mit Visualisierungen und Ihren Top 7 Signaturstärken.")
             
             if st.button("📋 PDF Bericht generieren", type="primary", key="pdf_button"):
-                with st.spinner("Erstelle PDF-Bericht..."):
+                with st.spinner("Erstelle PDF-Bericht mit Grafiken..."):
                     try:
                         pdf_buffer = create_pdf_report(
                             st.session_state.results, 
-                            st.session_state.ranking_df
+                            st.session_state.ranking_df,
+                            st.session_state.fig1,
+                            st.session_state.fig2, 
+                            st.session_state.fig3
                         )
                         
                         timestamp = datetime.now().strftime("%Y%m%d_%H%M")
@@ -745,15 +759,7 @@ def main():
                             get_pdf_download_link(pdf_buffer, filename), 
                             unsafe_allow_html=True
                         )
-                        st.success("✅ PDF Bericht erfolgreich generiert!")
-                        
-                        st.markdown("### 📋 Berichtsinhalt:")
-                        st.markdown("""
-                        - **Einleitung** zum VIA-IS und Positive Psychologie
-                        - **Detaillierte Beschreibungen** Ihrer Top 7 Signaturstärken
-                        - **Zusammenfassung** und Empfehlungen für die Anwendung
-                        - **Professionelles Layout** mit UTF-8 Unterstützung
-                        """)
+                        st.success("✅ PDF Bericht mit Grafiken erfolgreich generiert!")
                         
                     except Exception as e:
                         st.error(f"Fehler beim Erstellen des PDFs: {str(e)}")
