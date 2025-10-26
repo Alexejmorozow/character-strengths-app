@@ -72,7 +72,7 @@ st.markdown("""
 # =========================
 CHARACTER_STRENGTHS = {
     "Liebe zum Lernen": {"domain": "Weisheit und Wissen", "color": "#4E79A7", "questions": [
-        "Ich lese regelmäßig Bücher oder Artikel, um Neues zu lernen",
+        "Ich lese regelmässig Bücher oder Artikel, um Neues zu lernen",
         "Neue Themen wecken sofort mein Interesse",
         "Ich besuche häufig Kurse oder Workshops aus Interesse am Thema",
         "Das Gefühl, etwas dazugelernt zu haben, bereitet mir Freude"
@@ -120,7 +120,7 @@ CHARACTER_STRENGTHS = {
         "Ich täusche nichts vor, um anderen zu gefallen"
     ]},
     "Enthusiasmus": {"domain": "Mut", "color": "#F28E2B", "questions": [
-        "Ich gehe Aufgaben mit großer Begeisterung an",
+        "Ich gehe Aufgaben mit grosser Begeisterung an",
         "Meine Energie steckt oft andere an",
         "Ich betreibe Dinge mit vollem Einsatz",
         "Lebensfreude ist ein wichtiger Teil meines Wesens"
@@ -133,13 +133,13 @@ CHARACTER_STRENGTHS = {
     ]},
     "Freundlichkeit": {"domain": "Menschlichkeit", "color": "#E15759", "questions": [
         "Ich helfe anderen gerne ohne Gegenleistung",
-        "Großzügigkeit macht mir Freude",
+        "Grosszügigkeit macht mir Freude",
         "Ich bemerke, wenn andere Unterstützung brauchen",
         "Kleine Gefälligkeiten sind für mich selbstverständlich"
     ]},
     "Soziale Intelligenz": {"domain": "Menschlichkeit", "color": "#E15759", "questions": [
         "Ich erkenne schnell die Stimmungen anderer Menschen",
-        "In sozialen Situationen weiß ich intuitiv, was angemessen ist",
+        "In sozialen Situationen weiss ich intuitiv, was angemessen ist",
         "Ich kann mich gut in andere hineinversetzen",
         "Zwischenmenschliche Dynamiken verstehe ich gut"
     ]},
@@ -212,7 +212,7 @@ CHARACTER_STRENGTHS = {
     "Spiritualität": {"domain": "Transzendenz", "color": "#EDC948", "questions": [
         "Ich habe klare Überzeugungen über den Sinn des Lebens",
         "Spiritualität gibt mir Halt und Orientierung",
-        "Ich denke über größere Zusammenhänge nach",
+        "Ich denke über grössere Zusammenhänge nach",
         "Mein Glaube beeinflusst mein Handeln"
     ]}
 }
@@ -227,7 +227,7 @@ STRENGTH_DESCRIPTIONS = {
     
     "Urteilsvermögen": "Menschen mit einem stark ausgeprägten Urteilsvermögen haben die Fähigkeit, Probleme und Gegebenheiten des Alltags aus unterschiedlichen Perspektiven zu betrachten und auf diese Weise Argumente für wichtige Entscheidungen zu entwickeln. Sie sind in der Lage, Informationen objektiv und kritisch zu beleuchten wobei sie sich an der Realität orientieren.",
     
-    "Liebe zum Lernen": "Wissbegierige Menschen zeichnen sich durch eine große Begeisterung für das Lernen neuer Fertigkeiten und Wissensinhalte aus. Sie lieben es, neue Dinge zu lernen und sind bemüht, sich ständig weiterzubilden und zu entwickeln. Dabei wird das ständige Lernen als eine Herausforderung betrachtet.",
+    "Liebe zum Lernen": "Wissbegierige Menschen zeichnen sich durch eine grosse Begeisterung für das Lernen neuer Fertigkeiten und Wissensinhalte aus. Sie lieben es, neue Dinge zu lernen und sind bemüht, sich ständig weiterzubilden und zu entwickeln. Dabei wird das ständige Lernen als eine Herausforderung betrachtet.",
     
     "Weisheit": "Weise Menschen sind weitsichtig und tiefsinnig. Sie haben einen guten Überblick und eine reife Sichtweise des Lebens. Ausserdem besitzen sie die Fähigkeit, eine sinnvolle Bilanz über das Leben ziehen zu können. Diese Koordination des gelernten Wissens und der gemachten Erfahrungen eines Menschen trägt zu seinem Wohlbefinden bei.",
     
@@ -239,7 +239,7 @@ STRENGTH_DESCRIPTIONS = {
     
     "Enthusiasmus": "Menschen mit einem ausgeprägten Tatendrang sind voller Energie und Lebensfreude und können sich für viele unterschiedliche Aktivitäten begeistern. Sie freuen sich auf jeden neuen Tag. Solche Menschen werden oft als energisch, flott, munter und schwungvoll beschrieben.",
     
-    "Freundlichkeit": "Freundliche Menschen zeichnen sich dadurch aus, dass sie sehr nett, großzügig und hilfsbereit zu anderen Menschen sind. Sie machen anderen Personen gerne einen Gefallen, auch wenn sie diese nicht gut kennen. Sie lieben es, andere glücklich zu machen.",
+    "Freundlichkeit": "Freundliche Menschen zeichnen sich dadurch aus, dass sie sehr nett, grosszügig und hilfsbereit zu anderen Menschen sind. Sie machen anderen Personen gerne einen Gefallen, auch wenn sie diese nicht gut kennen. Sie lieben es, andere glücklich zu machen.",
     
     "Bindungsfähigkeit": "Menschen mit einer sicheren Bindungsfähigkeit zeichnen sich dadurch aus, dass sie anderen Menschen ihre Liebe zeigen können und auch in der Lage sind, Liebe von anderen anzunehmen. Bei dieser Stärke handelt es sich um die Fähigkeit enge Beziehungen und Freundschaften mit Mitmenschen aufzubauen.",
     
@@ -403,7 +403,7 @@ def create_spider_chart(domain_scores):
     categories = domain_scores['Domäne'].tolist()
     values = domain_scores['Wert'].tolist()
     
-    # Das Radar-Chart schließen, indem wir den ersten Punkt am Ende wiederholen
+    # Das Radar-Chart schliessen, indem wir den ersten Punkt am Ende wiederholen
     categories = categories + [categories[0]]
     values = values + [values[0]]
     
@@ -680,7 +680,7 @@ def create_professional_pdf_report(results, ranking_df):
         "Signaturstärken (typischerweise Rang 1-7) sind jene Stärken, die Sie besonders charakterisieren und deren Ausübung Sie als erfüllend empfinden.",
         "Die Ausprägungen Ihrer Charakterstärken bleiben im Erwachsenenalter in der Regel relativ stabil.",
         "Niedrigere Ränge sind nicht als Schwächen zu interpretieren, sondern als weniger ausgeprägte Stärken.",
-        "Die regelmäßige Anwendung Ihrer Signaturstärken kann zu mehr Zufriedenheit und Wohlbefinden führen."
+        "Die regelmässige Anwendung Ihrer Signaturstärken kann zu mehr Zufriedenheit und Wohlbefinden führen."
     ]
     
     for text in interpretation_texts:
@@ -732,7 +732,7 @@ def main():
     # Einleitungstext
     st.markdown("""
     Die folgenden Fragen beziehen sich auf Merkmale und Verhaltensweisen, die viele Menschen als positiv einschätzen. 
-    Bitte beantworten Sie die Aussagen ehrlich und geben Sie an, in welchem Maß sie auf Sie persönlich zutreffen.
+    Bitte beantworten Sie die Aussagen ehrlich und geben Sie an, in welchem Mass sie auf Sie persönlich zutreffen.
 
     Der originale VIA-IS-Fragebogen umfasst **240 Fragen**. 
     In dieser Version wurde er verkürzt, um die Bearbeitungszeit zu reduzieren, ohne den inhaltlichen Schwerpunkt zu verändern. 
