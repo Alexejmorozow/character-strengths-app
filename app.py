@@ -561,7 +561,7 @@ def create_professional_pdf_report(results, ranking_df):
     content.append(Spacer(1, 0.3*inch))
     
     # Untertitel
-    content.append(Paragraph('Wissenschaftliche Auswertung Ihrer persönlichen Stärken', styles['BodyEnhanced']))
+    content.append(Paragraph('Auswertung Ihrer persönlichen Stärken', styles['BodyEnhanced']))
     content.append(Spacer(1, 0.4*inch))
     
     # Erstellt am
