@@ -441,7 +441,7 @@ def create_spider_chart(domain_scores):
     return fig
 
 # ======================
-# 📄 PDF GENERIERUNG mit ReportLab und Grafiken
+# 📄 PDF GENERIERUNG mit ReportLab und Grafiken (OHNE KALEIDO)
 # ======================
 def create_pdf_report(results, ranking_df, fig1, fig2, fig3):
     """Erstellt einen PDF-Bericht mit ReportLab inklusive Grafiken"""
@@ -512,64 +512,59 @@ def create_pdf_report(results, ranking_df, fig1, fig2, fig3):
     content.append(Paragraph('Visualisierung Ihrer Ergebnisse', styles['CustomHeading']))
     content.append(Spacer(1, 0.2*inch))
     
-    # Balkendiagramm als Bild einfügen
+    # Balkendiagramm als Bild einfügen - OHNE KALEIDO
     try:
-        # Fig1 (Balkendiagramm) als PNG exportieren - mit expliziter Kaleido Konfiguration
-        img_buffer = io.BytesIO()
+        # Verwende plotly.io.to_image ohne Kaleido
+        import plotly.io as pio
         
         # Temporär den Titel entfernen für bessere Darstellung im PDF
         fig1_no_title = fig1.update_layout(
             title=None, 
             margin=dict(t=30, b=60, l=60, r=30),
-            showlegend=True
+            showlegend=True,
+            width=800,
+            height=500
         )
         
-        fig1_no_title.write_image(
-            img_buffer, 
-            format='png', 
-            width=800, 
-            height=500,
-            engine='kaleido',
-            scale=2  # Höhere Qualität
-        )
-        img_buffer.seek(0)
+        # Export als PNG ohne Kaleido
+        img_bytes = pio.to_image(fig1_no_title, format='png', scale=1)
+        img_buffer = io.BytesIO(img_bytes)
         img = ImageReader(img_buffer)
+        
         content.append(Paragraph('Charakterstärken - Ranking', styles['StrengthHeader']))
         content.append(Spacer(1, 0.1*inch))
         content.append(Image(img, width=6*inch, height=3.75*inch))
         content.append(Spacer(1, 0.2*inch))
+        st.success("✅ Balkendiagramm erfolgreich ins PDF eingefügt")
     except Exception as e:
         content.append(Paragraph('Balkendiagramm konnte nicht geladen werden', styles['Italic']))
-        st.error(f"Fehler beim Balkendiagramm: {e}")
+        st.warning(f"Balkendiagramm konnte nicht exportiert werden: {e}")
     
-    # Spider-Chart als Bild einfügen
+    # Spider-Chart als Bild einfügen - OHNE KALEIDO
     try:
-        # Fig3 (Spider-Chart) als PNG exportieren
-        img_buffer = io.BytesIO()
+        import plotly.io as pio
         
         # Temporär den Titel entfernen
         fig3_no_title = fig3.update_layout(
             title=None, 
-            margin=dict(t=30, b=30, l=30, r=30)
+            margin=dict(t=30, b=30, l=30, r=30),
+            width=600,
+            height=500
         )
         
-        fig3_no_title.write_image(
-            img_buffer, 
-            format='png', 
-            width=600, 
-            height=500,
-            engine='kaleido',
-            scale=2
-        )
-        img_buffer.seek(0)
+        # Export als PNG ohne Kaleido
+        img_bytes = pio.to_image(fig3_no_title, format='png', scale=1)
+        img_buffer = io.BytesIO(img_bytes)
         img = ImageReader(img_buffer)
+        
         content.append(Paragraph('Charakterstärken-Profil nach Domänen', styles['StrengthHeader']))
         content.append(Spacer(1, 0.1*inch))
         content.append(Image(img, width=5*inch, height=4*inch))
         content.append(Spacer(1, 0.2*inch))
+        st.success("✅ Spider-Diagramm erfolgreich ins PDF eingefügt")
     except Exception as e:
         content.append(Paragraph('Spider-Diagramm konnte nicht geladen werden', styles['Italic']))
-        st.error(f"Fehler beim Spider-Diagramm: {e}")
+        st.warning(f"Spider-Diagramm konnte nicht exportiert werden: {e}")
     
     # Seitenumbruch für Top 7 Stärken
     content.append(PageBreak())
