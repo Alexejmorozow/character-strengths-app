@@ -3,6 +3,10 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import random
+from fpdf import FPDF
+import tempfile
+import base64
+from datetime import datetime
 
 # =====================
 # 🔧 Grundkonfiguration
@@ -54,34 +58,34 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =========================
-# 📚 Charakterstärken-Daten
+# 📚 Charakterstärken-Daten mit korrekten Domain-Namen
 # =========================
 CHARACTER_STRENGTHS = {
-    "Liebe zum Lernen": {"domain": "🧠 Weisheit & Wissen", "color": "#4E79A7", "questions": [
+    "Liebe zum Lernen": {"domain": "🧠 Weisheit und Wissen", "color": "#4E79A7", "questions": [
         "Ich lese regelmäßig Bücher oder Artikel, um Neues zu lernen",
         "Neue Themen wecken sofort mein Interesse",
         "Ich besuche häufig Kurse oder Workshops aus Interesse am Thema",
         "Das Gefühl, etwas dazugelernt zu haben, bereitet mir Freude"
     ]},
-    "Urteilsvermögen": {"domain": "🧠 Weisheit & Wissen", "color": "#4E79A7", "questions": [
+    "Urteilsvermögen": {"domain": "🧠 Weisheit und Wissen", "color": "#4E79A7", "questions": [
         "Ich hinterfrage Informationen, bevor ich sie akzeptiere",
         "Bei Entscheidungen wäge ich verschiedene Perspektiven ab",
         "Ich ändere meine Meinung, wenn neue Fakten vorliegen",
         "Komplexe Probleme analysiere ich gründlich"
     ]},
-    "Neugier": {"domain": "🧠 Weisheit & Wissen", "color": "#4E79A7", "questions": [
+    "Neugier": {"domain": "🧠 Weisheit und Wissen", "color": "#4E79A7", "questions": [
         "Ich stelle oft Fragen, um Dinge besser zu verstehen",
         "Unbekannte Orte und Aktivitäten reizen mich",
         "Ich erkunde gerne neue Ideen und Konzepte",
         "Alltägliche Dinge betrachte ich oft mit Staunen"
     ]},
-    "Kreativität": {"domain": "🧠 Weisheit & Wissen", "color": "#4E79A7", "questions": [
+    "Kreativität": {"domain": "🧠 Weisheit und Wissen", "color": "#4E79A7", "questions": [
         "Ich habe oft originelle und einfallsreiche Ideen",
         "Ich suche nach neuen Wegen, um Aufgaben zu erledigen",
         "Kreative Lösungen machen mir besondere Freude",
         "Ich denke gerne über unkonventionelle Ansätze nach"
     ]},
-    "Weisheit": {"domain": "🧠 Weisheit & Wissen", "color": "#4E79A7", "questions": [
+    "Weisheit": {"domain": "🧠 Weisheit und Wissen", "color": "#4E79A7", "questions": [
         "Andere Menschen bitten mich oft um Rat",
         "Ich betrachte Situationen aus einer langfristigen Perspektive",
         "Meine Lebenserfahrung hilft mir bei schwierigen Entscheidungen",
@@ -111,19 +115,19 @@ CHARACTER_STRENGTHS = {
         "Ich betreibe Dinge mit vollem Einsatz",
         "Lebensfreude ist ein wichtiger Teil meines Wesens"
     ]},
-    "Bindungsfähigkeit": {"domain": "🤝 Humanität", "color": "#E15759", "questions": [
+    "Bindungsfähigkeit": {"domain": "🤝 Menschlichkeit", "color": "#E15759", "questions": [
         "Tiefe zwischenmenschliche Beziehungen sind mir wichtig",
         "Ich pflege enge Verbindungen zu meinen Liebsten",
         "Gegenseitiges Vertreuen ist die Basis meiner Beziehungen",
         "Ich investiere Zeit und Energie in meine wichtigsten Beziehungen"
     ]},
-    "Freundlichkeit": {"domain": "🤝 Humanität", "color": "#E15759", "questions": [
+    "Freundlichkeit": {"domain": "🤝 Menschlichkeit", "color": "#E15759", "questions": [
         "Ich helfe anderen gerne ohne Gegenleistung",
         "Großzügigkeit macht mir Freude",
         "Ich bemerke, wenn andere Unterstützung brauchen",
         "Kleine Gefälligkeiten sind für mich selbstverständlich"
     ]},
-    "Soziale Intelligenz": {"domain": "🤝 Humanität", "color": "#E15759", "questions": [
+    "Soziale Intelligenz": {"domain": "🤝 Menschlichkeit", "color": "#E15759", "questions": [
         "Ich erkenne schnell die Stimmungen anderer Menschen",
         "In sozialen Situationen weiß ich intuitiv, was angemessen ist",
         "Ich kann mich gut in andere hineinversetzen",
@@ -147,60 +151,113 @@ CHARACTER_STRENGTHS = {
         "Ich organisiere gerne Aktivitäten für Gruppen",
         "Andere folgen mir freiwillig"
     ]},
-    "Vergebungsbereitschaft": {"domain": "🕊️ Mäßigung", "color": "#59A14F", "questions": [
+    "Vergebungsbereitschaft": {"domain": "🕊️ Mässigung", "color": "#59A14F", "questions": [
         "Ich kann anderen leicht verzeihen",
         "Nach Konflikten gewähre ich eine zweite Chance",
         "Groll trage ich nicht lange mit mir herum",
         "Vergebung ist mir wichtiger als Rache"
     ]},
-    "Bescheidenheit": {"domain": "🕊️ Mäßigung", "color": "#59A14F", "questions": [
+    "Bescheidenheit": {"domain": "🕊️ Mässigung", "color": "#59A14F", "questions": [
         "Ich prahle nicht mit meinen Erfolgen",
         "Im Mittelpunkt stehen macht mir nichts aus",
         "Meine Fähigkeiten sprechen für sich selbst",
         "Ich sehe mich nicht als etwas Besonderes"
     ]},
-    "Vorsicht": {"domain": "🕊️ Mäßigung", "color": "#59A14F", "questions": [
+    "Vorsicht": {"domain": "🕊️ Mässigung", "color": "#59A14F", "questions": [
         "Ich überlege Konsequenzen, bevor ich handle",
         "Risiken schätze ich sorgfältig ab",
         "Impulsive Entscheidungen vermeide ich",
         "Sorgfältige Planung ist mir wichtig"
     ]},
-    "Selbstregulation": {"domain": "🕊️ Mäßigung", "color": "#59A14F", "questions": [
+    "Selbstregulation": {"domain": "🕊️ Mässigung", "color": "#59A14F", "questions": [
         "Ich kann meine Gefühle gut kontrollieren",
         "Versuchungen widerstehe ich leicht",
         "Disziplin fällt mir nicht schwer",
         "Ich bleibe auch unter Stress gelassen"
     ]},
-    "Sinn für das Schöne": {"domain": "✨ Spiritualität", "color": "#EDC948", "questions": [
+    "Sinn für das Schöne": {"domain": "✨ Transzendenz", "color": "#EDC948", "questions": [
         "Ich bewundere häufig Schönheit in Natur oder Kunst",
         "Ästhetische Erlebnisse berühren mich tief",
         "Ich nehme Schönheit im Alltag bewusst wahr",
         "Kunst, Musik oder Natur begeistern mich"
     ]},
-    "Dankbarkeit": {"domain": "✨ Spiritualität", "color": "#EDC948", "questions": [
+    "Dankbarkeit": {"domain": "✨ Transzendenz", "color": "#EDC948", "questions": [
         "Ich bin dankbar für die guten Dinge in meinem Leben",
         "Oft halte ich inne, um meine Dankbarkeit auszudrücken",
         "Ich schätze bewusst, was ich habe",
         "Dankbarkeit ist ein täglicher Teil meines Lebens"
     ]},
-    "Hoffnung": {"domain": "✨ Spiritualität", "color": "#EDC948", "questions": [
+    "Hoffnung": {"domain": "✨ Transzendenz", "color": "#EDC948", "questions": [
         "Ich blicke optimistisch in die Zukunft",
         "Auch in schwierigen Zeiten sehe ich Licht am Horizont",
         "Ich vertraue darauf, dass sich Dinge zum Guten wenden",
         "Positive Erwartungen prägen meine Haltung"
     ]},
-    "Humor": {"domain": "✨ Spiritualität", "color": "#EDC948", "questions": [
+    "Humor": {"domain": "✨ Transzendenz", "color": "#EDC948", "questions": [
         "Ich lache gerne und bringe andere zum Lachen",
         "Humor hilft mir in schwierigen Situationen",
         "Ich sehe oft die komische Seite des Lebens",
         "Spielerische Leichtigkeit ist mir wichtig"
     ]},
-    "Spiritualität": {"domain": "✨ Spiritualität", "color": "#EDC948", "questions": [
+    "Spiritualität": {"domain": "✨ Transzendenz", "color": "#EDC948", "questions": [
         "Ich habe klare Überzeugungen über den Sinn des Lebens",
         "Spiritualität gibt mir Halt und Orientierung",
         "Ich denke über größere Zusammenhänge nach",
         "Mein Glaube beeinflusst mein Handeln"
     ]}
+}
+
+# =========================
+# 📖 BESCHREIBUNGSTEXTE aus dem VIA-Bericht
+# =========================
+STRENGTH_DESCRIPTIONS = {
+    "Kreativität": "Kreative Menschen produzieren ständig eine Vielzahl von verschiedenen originellen Ideen oder sie zeigen originelle Verhaltensweisen. Diese Ideen und Verhaltensweisen zeichnen sich nicht nur dadurch aus, dass sie innovativ und neu sind, sie müssen auch der Realität angepasst sein, damit sie dem Individuum im Leben nützlich sind und ihm weiterhelfen.",
+    
+    "Neugier": "Neugierige Menschen haben ein ausgeprägtes Interesse an neuen Erfahrungen. Sie sind sehr offen und flexibel bezüglich neuen, oft auch unerwarteten Situationen. Sie haben viele Interessen und finden an jeder Situation etwas Interessantes. Sie suchen aktiv nach Abwechslungen und Herausforderungen in ihrem täglichen Leben.",
+    
+    "Urteilsvermögen": "Menschen mit einem stark ausgeprägten Urteilsvermögen haben die Fähigkeit, Probleme und Gegebenheiten des Alltags aus unterschiedlichen Perspektiven zu betrachten und auf diese Weise Argumente für wichtige Entscheidungen zu entwickeln. Sie sind in der Lage, Informationen objektiv und kritisch zu beleuchten wobei sie sich an der Realität orientieren.",
+    
+    "Liebe zum Lernen": "Wissbegierige Menschen zeichnen sich durch eine große Begeisterung für das Lernen neuer Fertigkeiten und Wissensinhalte aus. Sie lieben es, neue Dinge zu lernen und sind bemüht, sich ständig weiterzubilden und zu entwickeln. Dabei wird das ständige Lernen als eine Herausforderung betrachtet.",
+    
+    "Weisheit": "Weise Menschen sind weitläufig und tiefsinnig. Sie haben einen guten Überblick und eine reife Sichtweise des Lebens. Ausserdem besitzen sie die Fähigkeit, eine sinnvolle Bilanz über das Leben ziehen zu können. Diese Koordination des geheimen Wissens und der gemachten Erfahrungen eines Menschen trägt zu seinem Wohlbefinden bei.",
+    
+    "Authentizität": "Authentische Menschen sind sich selbst und ihren Mitmenschen gegenüber aufrichtig und ehrlich. Sie halten ihre Versprechen und bleiben ihren Prinzipien treu. Sie legen Wert darauf, die Realität unverfälscht wahrzunehmen. Authentizität befähigt Menschen für sich selbst die Verantwortung zu übernehmen.",
+    
+    "Tapferkeit": "Tapfere Menschen streben nach ihren Zielen und lassen sich dabei nicht von Schwierigkeiten und Hindernissen entmutigen. Tapferkeit kann sich in unterschiedlichen Lebensbereichen zeigen. Es handelt sich um die Fähigkeit, etwas Positives und Nützliches trotz drohenden Gefahren weiterzubringen.",
+    
+    "Ausdauer": "Ausdauer kennzeichnet Individuen, die alles zu Ende bringen wollen, was sie sich vorgenommen haben. Sie sind zielstrebig, geben nicht schnell auf, beenden was sie angefangen haben und lassen sich selten ablenken. Ausdauernde Menschen sind beharrlich – sie verfolgen aber nicht zwanghaft unerreichbare Ziele.",
+    
+    "Enthusiasmus": "Menschen mit einem ausgeprägten Tatendrang sind voller Energie und Lebensfreude und können sich für viele unterschiedliche Aktivitäten begeistern. Sie freuen sich auf jeden neuen Tag. Solche Menschen werden oft als energisch, flott, munter und schwungvoll beschrieben.",
+    
+    "Freundlichkeit": "Freundliche Menschen zeichnen sich dadurch aus, dass sie sehr nett, großzügig und hilfsbereit zu anderen Menschen sind. Sie machen anderen Personen gerne einen Gefallen, auch wenn sie diese nicht gut kennen. Sie lieben es, andere glücklich zu machen.",
+    
+    "Bindungsfähigkeit": "Menschen mit einer sicheren Bindungsfähigkeit zeichnen sich dadurch aus, dass sie anderen Menschen ihre Liebe zeigen können und auch in der Lage sind, Liebe von anderen anzunehmen. Bei dieser Stärke handelt es sich um die Fähigkeit enge Beziehungen und Freundschaften mit Mitmenschen aufzubauen.",
+    
+    "Soziale Intelligenz": "Menschen unterscheiden sich in der Fähigkeit, wichtige soziale Informationen, wie z.B. Gefühle, wahrzunehmen und zu verarbeiten. Sozial kompetente Menschen kennen ihre eigenen Motive und Gefühle. Sie kennen auch ihre eigenen Interessen und Fähigkeiten und sind in der Lage, sie zu fördern.",
+    
+    "Teamwork": "Menschen mit dieser Stärke zeichnen sich durch ihre Teamfähigkeit und Loyalität gegenüber ihrer Gruppe aus. Sie können dann am besten arbeiten, wenn sie Teil einer Gruppe sind. Die Gruppenzugehörigkeit wird sehr hoch bewertet. Teamfähige Menschen tragen oft eine soziale Verantwortung.",
+    
+    "Fairness": "Faire Menschen besitzen einen ausgeprägten Sinn für Gerechtigkeit und Gleichheit. Jede Person wird von ihnen gleich und fair behandelt, ungeachtet dessen, wer und was sie ist. Sie lassen sich in Entscheidungen nicht durch persönliche Gefühle beeinflussen und versuchen allen eine Chance zu geben.",
+    
+    "Führungsvermögen": "Menschen mit einem ausgeprägten Führungsvermögen besitzen die Fähigkeit, einer Gruppe trotz individueller Unterschiede eine gute Zusammenarbeit zu ermöglichen. Ebenso zeichnen sie sich durch gute Planungs- und Organisationsfähigkeiten von Gruppenaktivitäten aus und dadurch, dass sie auch schwierige Entscheidungen treffen können.",
+    
+    "Vergebungsbereitschaft": "Menschen mit dieser Stärke sind eher in der Lage Vergangenes (z.B. zwischenmenschliche Konflikte) ruhen zu lassen und einen Neuanfang zu wagen. Sie können bis zu einem gewissen Punkt Verständnis aufbringen für die schlechte Behandlung durch andere Menschen und geben ihnen eine Chance zur Wiedergutmachung.",
+    
+    "Bescheidenheit": "Bescheidene Menschen zeichnen sich dadurch aus, dass sie nicht mit ihren Erfolgen prahlen. In der Menge fallen sie nicht gerne auf und wollen nicht die Aufmerksamkeit auf sich ziehen, sondern ziehen es vor, andere reden zu lassen. Bescheidene Menschen können eigene Fehler und Mängel zugeben.",
+    
+    "Vorsicht": "Vorsichtige Menschen treffen Entscheidungen sorgfältig, denken über mögliche Konsequenzen vor dem Sprechen und Handeln nach und können Recht von Unrecht unterscheiden. Sie vermeiden gefährliche körperliche Aktivitäten, was aber nicht heisst, dass sie neue Erfahrungen meiden.",
+    
+    "Selbstregulation": "Menschen mit ausgeprägter Selbstregulation bekunden keine Mühe, ihre Gefühle und ihr Verhalten in entsprechenden Situationen zu kontrollieren, z.B. eine Diät durchhalten, sich gesund ernähren, regelmässig trainieren, rechtzeitig Aufgaben erledigen. Sie zeichnen sich dadurch aus, dass sie längerfristigen Erfolg dem kurzfristigen vorziehen.",
+    
+    "Sinn für das Schöne": "Menschen, die in verschiedenen Lebensbereichen (wie z.B. Musik, Kunst, Natur, Sport, Wissenschaft) Schönes bewusst wahrnehmen, wertschätzen und sich darüber freuen können, haben einen ausgeprägten Sinn für das Schöne. Sie nehmen im Alltag schöne Dinge wahr, die von anderen übersehen oder nicht beachtet werden.",
+    
+    "Dankbarkeit": "Dankbare Menschen sind sich bewusst über die vielen guten Dinge in ihrem Leben, wissen diese zu schätzen und nehmen sie nicht als selbstverständlich hin. Sie nehmen sich die Zeit, ihre Dankbarkeit Menschen gegenüber auszudrücken, z.B. wenn sie ein Geschenk bekommen.",
+    
+    "Hoffnung": "Hoffnungsvolle Menschen haben grundsätzlich eine positive Einstellung gegenüber der Zukunft. Sie sind optimistisch und zuversichtlich und können auch dann etwas positiv noch sehen, wenn es für andere negativ erscheint. Sie hoffen das Beste für die Zukunft und tun ihr Möglichstes, um ihre Ziele zu erreichen.",
+    
+    "Humor": "Humorvolle Menschen haben gerne und bringen andere Menschen gerne zum Lächeln oder zum Lachen. Sie versuchen ihre Freunde und Freundinnen aufzuheitern, wenn diese in einer bedrückten Stimmung sind. Menschen mit einem ausgeprägten Sinn für Humor versuchen in allen möglichen Situationen Spass zu haben.",
+    
+    "Spiritualität": "Spirituelle Menschen haben kohärente Überzeugungen über den höheren Sinn und Zweck des Universums. Sie glauben an eine übermächtige Macht bzw. an einen Gott. Ihre religiösen Überzeugungen beeinflussen ihr Denken, Handeln und Fühlen und können auch in schwierigen Zeiten eine Quelle des Trostes und der Kraft sein."
 }
 
 LIKERT_OPTIONS = {
@@ -303,12 +360,12 @@ def plot_results(results):
         x="Wert", y="Stärke",
         color="Domäne",
         color_discrete_map={
-            "🧠 Weisheit & Wissen": "#4E79A7",
+            "🧠 Weisheit und Wissen": "#4E79A7",
             "💪 Mut": "#F28E2B",
-            "🤝 Humanität": "#E15759",
+            "🤝 Menschlichkeit": "#E15759",
             "⚖️ Gerechtigkeit": "#76B7B2",
-            "🕊️ Mäßigung": "#59A14F",
-            "✨ Spiritualität": "#EDC948"
+            "🕊️ Mässigung": "#59A14F",
+            "✨ Transzendenz": "#EDC948"
         },
         orientation="h",
         title="Charakterstärken - Ranking"
@@ -318,12 +375,12 @@ def plot_results(results):
     domain_scores = df.groupby("Domäne")["Wert"].mean().reset_index()
     fig2 = px.pie(domain_scores, values="Wert", names="Domäne", hole=0.4,
                   color_discrete_map={
-                      "🧠 Weisheit & Wissen": "#4E79A7",
+                      "🧠 Weisheit und Wissen": "#4E79A7",
                       "💪 Mut": "#F28E2B",
-                      "🤝 Humanität": "#E15759",
+                      "🤝 Menschlichkeit": "#E15759",
                       "⚖️ Gerechtigkeit": "#76B7B2",
-                      "🕊️ Mäßigung": "#59A14F",
-                      "✨ Spiritualität": "#EDC948"
+                      "🕊️ Mässigung": "#59A14F",
+                      "✨ Transzendenz": "#EDC948"
                   },
                   title="Durchschnittliche Ausprägung nach Domänen")
     
@@ -371,6 +428,142 @@ def create_spider_chart(domain_scores):
     )
     
     return fig
+
+# ======================
+# 📄 PDF GENERIERUNG
+# ======================
+def create_pdf_report(results, ranking_df, fig1, fig2, fig3):
+    """Erstellt einen detaillierten PDF-Bericht mit Top 7 Stärken"""
+    
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    
+    # Seite 1: Einleitung und Hintergrund
+    pdf.add_page()
+    pdf.set_font('Arial', 'B', 16)
+    pdf.cell(0, 10, 'VIA Charakterstärken Bericht', 0, 1, 'C')
+    pdf.ln(10)
+    
+    pdf.set_font('Arial', '', 12)
+    pdf.multi_cell(0, 8, 
+        'Dieser Bericht basiert auf dem VIA-IS (Values in Action Inventory of Strengths), '
+        'einem wissenschaftlichen Fragebogen zur Erfassung von 24 Charakterstärken, '
+        'die unter sechs Tugenden eingeordnet werden können. Der VIA-IS wurde unter der '
+        'Leitung der Psychologen Christopher Peterson und Martin Seligman entwickelt und '
+        'wird seit 2004 eingesetzt.'
+    )
+    pdf.ln(5)
+    pdf.multi_cell(0, 8,
+        'Die Positive Psychologie, auf der dieser Test basiert, beschäftigt sich mit '
+        'dem optimalen menschlichen Funktionieren. Im Gegensatz zur traditionellen '
+        'Psychologie, die sich oft auf psychische Erkrankungen konzentriert, erforscht '
+        'die Positive Psychologie Faktoren, die ein "gutes Leben" ermöglichen.'
+    )
+    pdf.ln(5)
+    pdf.multi_cell(0, 8,
+        'Ihre persönlichen Signaturstärken (typischerweise 3-7 Stärken) sind diejenigen '
+        'Charaktereigenschaften, die für Sie besonders zentral sind und deren Ausübung '
+        'Sie als erfüllend empfinden.'
+    )
+    
+    # Seite 2: Visualisierungen Platzhalter
+    pdf.add_page()
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(0, 10, 'Visualisierung Ihrer Ergebnisse', 0, 1)
+    pdf.ln(5)
+    pdf.set_font('Arial', '', 12)
+    pdf.multi_cell(0, 8,
+        'Die folgenden Diagramme zeigen Ihre Charakterstärken im Überblick. '
+        'Im weiteren Verlauf dieses Berichts finden Sie detaillierte Beschreibungen '
+        'Ihrer Top 7 Signaturstärken.'
+    )
+    pdf.ln(10)
+    pdf.multi_cell(0, 8, '[Platzhalter für Balkendiagramm]')
+    pdf.ln(5)
+    pdf.multi_cell(0, 8, '[Platzhalter für Spider-Diagramm]')
+    
+    # Top 7 Stärken detailliert
+    top_7_strengths = ranking_df.head(7)
+    
+    for index, row in top_7_strengths.iterrows():
+        pdf.add_page()
+        strength_name = row['Stärke']
+        rank = row['Rang']
+        domain = row['Domäne']
+        score = row['Wert']
+        
+        pdf.set_font('Arial', 'B', 14)
+        pdf.cell(0, 10, f'{rank}. {strength_name}', 0, 1)
+        pdf.set_font('Arial', 'I', 12)
+        pdf.cell(0, 8, f'Domäne: {domain} | Ausprägung: {score}', 0, 1)
+        pdf.ln(5)
+        
+        pdf.set_font('Arial', '', 12)
+        description = STRENGTH_DESCRIPTIONS.get(strength_name, "Beschreibung nicht verfügbar.")
+        pdf.multi_cell(0, 8, description)
+        pdf.ln(5)
+        
+        # Zusätzliche Informationen basierend auf dem Bericht
+        if strength_name in ["Kreativität", "Neugier", "Urteilsvermögen", "Liebe zum Lernen", "Weisheit"]:
+            pdf.multi_cell(0, 8, 
+                "Diese Stärke gehört zur Tugend der Weisheit und Wissen - kognitive Stärken, "
+                "die den Erwerb und den Gebrauch von Wissen beinhalten."
+            )
+        elif strength_name in ["Authentizität", "Tapferkeit", "Ausdauer", "Enthusiasmus"]:
+            pdf.multi_cell(0, 8,
+                "Diese Stärke gehört zur Tugend des Mutes - emotionale Stärken, die das "
+                "Erreichen von Zielen durch Überwindung von Barrieren ermöglichen."
+            )
+        elif strength_name in ["Freundlichkeit", "Bindungsfähigkeit", "Soziale Intelligenz"]:
+            pdf.multi_cell(0, 8,
+                "Diese Stärke gehört zur Tugend der Menschlichkeit - interpersonale Stärken, "
+                "die liebevolle menschliche Interaktionen ermöglichen."
+            )
+        elif strength_name in ["Teamwork", "Fairness", "Führungsvermögen"]:
+            pdf.multi_cell(0, 8,
+                "Diese Stärke gehört zur Tugend der Gerechtigkeit - Stärken, die das "
+                "Gemeinwesen fördern."
+            )
+        elif strength_name in ["Vergebungsbereitschaft", "Bescheidenheit", "Vorsicht", "Selbstregulation"]:
+            pdf.multi_cell(0, 8,
+                "Diese Stärke gehört zur Tugend der Mässigung - Stärken, die Exzessen "
+                "entgegenwirken."
+            )
+        elif strength_name in ["Sinn für das Schöne", "Dankbarkeit", "Hoffnung", "Humor", "Spiritualität"]:
+            pdf.multi_cell(0, 8,
+                "Diese Stärke gehört zur Tugend der Transzendenz - Stärken, die uns einer "
+                "höheren Macht näher bringen und Sinn stiften."
+            )
+    
+    # Letzte Seite: Zusammenfassung
+    pdf.add_page()
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(0, 10, 'Zusammenfassung und nächste Schritte', 0, 1)
+    pdf.ln(5)
+    pdf.set_font('Arial', '', 12)
+    pdf.multi_cell(0, 8,
+        'Ihre Signaturstärken sind ein wertvolles Werkzeug für Ihre persönliche Entwicklung. '
+        'Sie können Ihnen helfen:'
+    )
+    pdf.ln(5)
+    pdf.multi_cell(0, 8, '•  Berufliche Entscheidungen zu treffen, die zu Ihren Stärken passen')
+    pdf.multi_cell(0, 8, '•  Herausforderungen mit Ihren natürlichen Ressourcen zu bewältigen')
+    pdf.multi_cell(0, 8, '•  Erfüllende Beziehungen zu gestalten')
+    pdf.multi_cell(0, 8, '•  Mehr Sinn und Zufriedenheit im Alltag zu finden')
+    pdf.ln(5)
+    pdf.multi_cell(0, 8,
+        'Nutzen Sie diese Stärken bewusst in verschiedenen Lebensbereichen und beobachten Sie, '
+        'wie sich dies auf Ihr Wohlbefinden auswirkt.'
+    )
+    
+    return pdf
+
+def get_pdf_download_link(pdf, filename):
+    """Erstellt einen Download-Link für das PDF"""
+    pdf_output = pdf.output(dest='S').encode('latin-1')
+    b64 = base64.b64encode(pdf_output).decode()
+    href = f'<a href="data:application/octet-stream;base64,{b64}" download="{filename}">📥 PDF Bericht herunterladen</a>'
+    return href
 
 # ==========================
 # 🚀 Hauptfunktion
@@ -452,20 +645,19 @@ def main():
                 answered += 1
 
     # Fortschritt - BEREINIGT
+    answered_questions = len([r for r in st.session_state.responses.values() if r > 0])
     if total_questions > 0:
-        progress = answered / total_questions
-        # Sicherstellen, dass progress zwischen 0 und 1 liegt
-        progress = max(0.0, min(1.0, progress))
+        progress = min(1.0, answered_questions / total_questions)
     else:
         progress = 0.0
 
     st.progress(progress)
-    st.caption(f"Fortschritt: {answered}/{total_questions} beantwortet")
+    st.caption(f"Fortschritt: {answered_questions}/{total_questions} beantwortet")
 
     # Ergebnisberechnung
     if st.button("🚀 Ergebnisse berechnen", type="primary"):
-        if answered < total_questions:
-            st.error(f"Bitte beantworte alle Fragen bevor du fortfährst. Noch {total_questions - answered} Fragen offen.")
+        if answered_questions < total_questions:
+            st.error(f"Bitte beantworte alle Fragen bevor du fortfährst. Noch {total_questions - answered_questions} Fragen offen.")
             return
 
         with st.spinner("Berechne Ergebnisse..."):
@@ -473,7 +665,7 @@ def main():
             ranking_df = create_ranking_table(results)
             fig1, fig2, fig3 = plot_results(results)
 
-            tab1, tab2, tab3, tab4 = st.tabs(["📊 Rangliste", "📈 Visualisierung", "🕷️ Spider-Diagramm", "💾 Export"])
+            tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Rangliste", "📈 Visualisierung", "🕷️ Spider-Diagramm", "📄 PDF Bericht", "💾 Export"])
 
             with tab1:
                 st.dataframe(ranking_df, use_container_width=True)
@@ -490,6 +682,32 @@ def main():
                 st.info("💡 Das Spider-Diagramm zeigt Ihre durchschnittliche Ausprägung in den sechs Charakterstärken-Domänen.")
 
             with tab4:
+                st.header("📄 PDF Bericht erstellen")
+                st.info("Erstellen Sie einen detaillierten Bericht mit Ihren Top 7 Signaturstärken basierend auf dem offiziellen VIA-Handbuch.")
+                
+                if st.button("📋 PDF Bericht generieren", type="primary"):
+                    with st.spinner("Erstelle PDF-Bericht..."):
+                        pdf = create_pdf_report(results, ranking_df, fig1, fig2, fig3)
+                        
+                        # Download-Link anzeigen
+                        timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+                        filename = f"VIA_Bericht_{timestamp}.pdf"
+                        
+                        st.markdown(
+                            get_pdf_download_link(pdf, filename), 
+                            unsafe_allow_html=True
+                        )
+                        st.success("✅ PDF Bericht erfolgreich generiert!")
+                        
+                        st.markdown("### 📋 Berichtsinhalt:")
+                        st.markdown("""
+                        - **Einleitung** zum VIA-IS und Positive Psychologie
+                        - **Visualisierungen** Ihrer Ergebnisse
+                        - **Detaillierte Beschreibungen** Ihrer Top 7 Signaturstärken
+                        - **Zusammenfassung** und Empfehlungen für die Anwendung
+                        """)
+
+            with tab5:
                 csv_data = ranking_df.to_csv(index=False).encode("utf-8")
                 st.download_button(
                     "📥 Ergebnisse als CSV herunterladen",
