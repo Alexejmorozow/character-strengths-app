@@ -158,7 +158,7 @@ CHARACTER_STRENGTHS = {
     ]},
     "Führungsvermögen": {"domain": "Gerechtigkeit", "color": "#76B7B2", "questions": [
         "Ich kann Gruppen gut motivieren und leiten",
-        "In Leitungsrollen fühle ich mich wohl",
+        "In Leitungsrollen fühle ich sich wohl",
         "Ich organisiere gerne Aktivitäten für Gruppen",
         "Andere folgen mir freiwillig"
     ]},
@@ -514,9 +514,24 @@ def create_pdf_report(results, ranking_df, fig1, fig2, fig3):
     
     # Balkendiagramm als Bild einfügen
     try:
-        # Fig1 (Balkendiagramm) als PNG exportieren
+        # Fig1 (Balkendiagramm) als PNG exportieren - mit expliziter Kaleido Konfiguration
         img_buffer = io.BytesIO()
-        fig1.write_image(img_buffer, format='png', width=800, height=500)
+        
+        # Temporär den Titel entfernen für bessere Darstellung im PDF
+        fig1_no_title = fig1.update_layout(
+            title=None, 
+            margin=dict(t=30, b=60, l=60, r=30),
+            showlegend=True
+        )
+        
+        fig1_no_title.write_image(
+            img_buffer, 
+            format='png', 
+            width=800, 
+            height=500,
+            engine='kaleido',
+            scale=2  # Höhere Qualität
+        )
         img_buffer.seek(0)
         img = ImageReader(img_buffer)
         content.append(Paragraph('Charakterstärken - Ranking', styles['StrengthHeader']))
@@ -525,13 +540,27 @@ def create_pdf_report(results, ranking_df, fig1, fig2, fig3):
         content.append(Spacer(1, 0.2*inch))
     except Exception as e:
         content.append(Paragraph('Balkendiagramm konnte nicht geladen werden', styles['Italic']))
-        print(f"Fehler beim Balkendiagramm: {e}")
+        st.error(f"Fehler beim Balkendiagramm: {e}")
     
     # Spider-Chart als Bild einfügen
     try:
         # Fig3 (Spider-Chart) als PNG exportieren
         img_buffer = io.BytesIO()
-        fig3.write_image(img_buffer, format='png', width=600, height=500)
+        
+        # Temporär den Titel entfernen
+        fig3_no_title = fig3.update_layout(
+            title=None, 
+            margin=dict(t=30, b=30, l=30, r=30)
+        )
+        
+        fig3_no_title.write_image(
+            img_buffer, 
+            format='png', 
+            width=600, 
+            height=500,
+            engine='kaleido',
+            scale=2
+        )
         img_buffer.seek(0)
         img = ImageReader(img_buffer)
         content.append(Paragraph('Charakterstärken-Profil nach Domänen', styles['StrengthHeader']))
@@ -540,7 +569,7 @@ def create_pdf_report(results, ranking_df, fig1, fig2, fig3):
         content.append(Spacer(1, 0.2*inch))
     except Exception as e:
         content.append(Paragraph('Spider-Diagramm konnte nicht geladen werden', styles['Italic']))
-        print(f"Fehler beim Spider-Diagramm: {e}")
+        st.error(f"Fehler beim Spider-Diagramm: {e}")
     
     # Seitenumbruch für Top 7 Stärken
     content.append(PageBreak())
