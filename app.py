@@ -3,11 +3,20 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import random
-from fpdf import FPDF
-import tempfile
 import base64
 from datetime import datetime
 import io
+
+# =====================
+# 🔧 PDF GENERIERUNG mit ReportLab
+# =====================
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+from reportlab.lib.units import inch
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 # =====================
 # 🔧 Grundkonfiguration
@@ -209,56 +218,56 @@ CHARACTER_STRENGTHS = {
 }
 
 # =========================
-# 📖 BESCHREIBUNGSTEXTE aus dem VIA-Bericht (bereinigt für PDF)
+# 📖 BESCHREIBUNGSTEXTE aus dem VIA-Bericht (mit originalen Umlauten)
 # =========================
 STRENGTH_DESCRIPTIONS = {
-    "Kreativität": "Kreative Menschen produzieren staendig eine Vielzahl von verschiedenen originellen Ideen oder sie zeigen originelle Verhaltensweisen. Diese Ideen und Verhaltensweisen zeichnen sich nicht nur dadurch aus, dass sie innovativ und neu sind, sie muessen auch der Realitaet angepasst sein, damit sie dem Individuum im Leben nuetzlich sind und ihm weiterhelfen.",
+    "Kreativität": "Kreative Menschen produzieren ständig eine Vielzahl von verschiedenen originellen Ideen oder sie zeigen originelle Verhaltensweisen. Diese Ideen und Verhaltensweisen zeichnen sich nicht nur dadurch aus, dass sie innovativ und neu sind, sie müssen auch der Realität angepasst sein, damit sie dem Individuum im Leben nützlich sind und ihm weiterhelfen.",
     
-    "Neugier": "Neugierige Menschen haben ein ausgepraegtes Interesse an neuen Erfahrungen. Sie sind sehr offen und flexibel bezueglich neuen, oft auch unerwarteten Situationen. Sie haben viele Interessen und finden an jeder Situation etwas Interessantes. Sie suchen aktiv nach Abwechslungen und Herausforderungen in ihrem taeglichen Leben.",
+    "Neugier": "Neugierige Menschen haben ein ausgeprägtes Interesse an neuen Erfahrungen. Sie sind sehr offen und flexibel bezüglich neuen, oft auch unerwarteten Situationen. Sie haben viele Interessen und finden an jeder Situation etwas Interessantes. Sie suchen aktiv nach Abwechslungen und Herausforderungen in ihrem täglichen Leben.",
     
-    "Urteilsvermögen": "Menschen mit einem stark ausgepraegten Urteilsvermoegen haben die Faehigkeit, Probleme und Gegebenheiten des Alltags aus unterschiedlichen Perspektiven zu betrachten und auf diese Weise Argumente fuer wichtige Entscheidungen zu entwickeln. Sie sind in der Lage, Informationen objektiv und kritisch zu beleuchten wobei sie sich an der Realitaet orientieren.",
+    "Urteilsvermögen": "Menschen mit einem stark ausgeprägten Urteilsvermögen haben die Fähigkeit, Probleme und Gegebenheiten des Alltags aus unterschiedlichen Perspektiven zu betrachten und auf diese Weise Argumente für wichtige Entscheidungen zu entwickeln. Sie sind in der Lage, Informationen objektiv und kritisch zu beleuchten wobei sie sich an der Realität orientieren.",
     
-    "Liebe zum Lernen": "Wissbegierige Menschen zeichnen sich durch eine grosse Begeisterung fuer das Lernen neuer Fertigkeiten und Wissensinhalte aus. Sie lieben es, neue Dinge zu lernen und sind bemueht, sich staendig weiterzubilden und zu entwickeln. Dabei wird das staendige Lernen als eine Herausforderung betrachtet.",
+    "Liebe zum Lernen": "Wissbegierige Menschen zeichnen sich durch eine große Begeisterung für das Lernen neuer Fertigkeiten und Wissensinhalte aus. Sie lieben es, neue Dinge zu lernen und sind bemüht, sich ständig weiterzubilden und zu entwickeln. Dabei wird das ständige Lernen als eine Herausforderung betrachtet.",
     
-    "Weisheit": "Weise Menschen sind weitlaeufig und tiefsinnig. Sie haben einen guten Ueberblick und eine reife Sichtweise des Lebens. Ausserdem besitzen sie die Faehigkeit, eine sinnvolle Bilanz ueber das Leben ziehen zu koennen. Diese Koordination des geheimen Wissens und der gemachten Erfahrungen eines Menschen traegt zu seinem Wohlbefinden bei.",
+    "Weisheit": "Weise Menschen sind weitläufig und tiefsinnig. Sie haben einen guten Überblick und eine reife Sichtweise des Lebens. Ausserdem besitzen sie die Fähigkeit, eine sinnvolle Bilanz über das Leben ziehen zu können. Diese Koordination des geheimen Wissens und der gemachten Erfahrungen eines Menschen trägt zu seinem Wohlbefinden bei.",
     
-    "Authentizität": "Authentische Menschen sind sich selbst und ihren Mitmenschen gegenueber aufrichtig und ehrlich. Sie halten ihre Versprechen und bleiben ihren Prinzipien treu. Sie legen Wert darauf, die Realitaet unverfaelscht wahrzunehmen. Authentizitaet befaehigt Menschen fuer sich selbst die Verantwortung zu uebernehmen.",
+    "Authentizität": "Authentische Menschen sind sich selbst und ihren Mitmenschen gegenüber aufrichtig und ehrlich. Sie halten ihre Versprechen und bleiben ihren Prinzipien treu. Sie legen Wert darauf, die Realität unverfälscht wahrzunehmen. Authentizität befähigt Menschen für sich selbst die Verantwortung zu übernehmen.",
     
-    "Tapferkeit": "Tapfere Menschen streben nach ihren Zielen und lassen sich dabei nicht von Schwierigkeiten und Hindernissen entmutigen. Tapferkeit kann sich in unterschiedlichen Lebensbereichen zeigen. Es handelt sich um die Faehigkeit, etwas Positives und Nuetzliches trotz drohenden Gefahren weiterzubringen.",
+    "Tapferkeit": "Tapfere Menschen streben nach ihren Zielen und lassen sich dabei nicht von Schwierigkeiten und Hindernissen entmutigen. Tapferkeit kann sich in unterschiedlichen Lebensbereichen zeigen. Es handelt sich um die Fähigkeit, etwas Positives und Nützliches trotz drohenden Gefahren weiterzubringen.",
     
-    "Ausdauer": "Ausdauer kennzeichnet Individuen, die alles zu Ende bringen wollen, was sie sich vorgenommen haben. Sie sind zielstrebig, geben nicht schnell auf, beenden was sie angefangen haben und lassen sich selten ablenken. Ausdauernde Menschen sind beharrlich - sie verfolgen aber nicht zwanghaft unerreichbare Ziele.",
+    "Ausdauer": "Ausdauer kennzeichnet Individuen, die alles zu Ende bringen wollen, was sie sich vorgenommen haben. Sie sind zielstrebig, geben nicht schnell auf, beenden was sie angefangen haben und lassen sich selten ablenken. Ausdauernde Menschen sind beharrlich – sie verfolgen aber nicht zwanghaft unerreichbare Ziele.",
     
-    "Enthusiasmus": "Menschen mit einem ausgepraegten Tatendrang sind voller Energie und Lebensfreude und koennen sich fuer viele unterschiedliche Aktivitäten begeistern. Sie freuen sich auf jeden neuen Tag. Solche Menschen werden oft als energisch, flott, munter und schwungvoll beschrieben.",
+    "Enthusiasmus": "Menschen mit einem ausgeprägten Tatendrang sind voller Energie und Lebensfreude und können sich für viele unterschiedliche Aktivitäten begeistern. Sie freuen sich auf jeden neuen Tag. Solche Menschen werden oft als energisch, flott, munter und schwungvoll beschrieben.",
     
-    "Freundlichkeit": "Freundliche Menschen zeichnen sich dadurch aus, dass sie sehr nett, grosszuegig und hilfsbereit zu anderen Menschen sind. Sie machen anderen Personen gerne einen Gefallen, auch wenn sie diese nicht gut kennen. Sie lieben es, andere gluecklich zu machen.",
+    "Freundlichkeit": "Freundliche Menschen zeichnen sich dadurch aus, dass sie sehr nett, großzügig und hilfsbereit zu anderen Menschen sind. Sie machen anderen Personen gerne einen Gefallen, auch wenn sie diese nicht gut kennen. Sie lieben es, andere glücklich zu machen.",
     
-    "Bindungsfähigkeit": "Menschen mit einer sicheren Bindungsfaehigkeit zeichnen sich dadurch aus, dass sie anderen Menschen ihre Liebe zeigen koennen und auch in der Lage sind, Liebe von anderen anzunehmen. Bei dieser Staerke handelt es sich um die Faehigkeit enge Beziehungen und Freundschaften mit Mitmenschen aufzubauen.",
+    "Bindungsfähigkeit": "Menschen mit einer sicheren Bindungsfähigkeit zeichnen sich dadurch aus, dass sie anderen Menschen ihre Liebe zeigen können und auch in der Lage sind, Liebe von anderen anzunehmen. Bei dieser Stärke handelt es sich um die Fähigkeit enge Beziehungen und Freundschaften mit Mitmenschen aufzubauen.",
     
-    "Soziale Intelligenz": "Menschen unterscheiden sich in der Faehigkeit, wichtige soziale Informationen, wie z.B. Gefuehle, wahrzunehmen und zu verarbeiten. Sozial kompetente Menschen kennen ihre eigenen Motive und Gefuehle. Sie kennen auch ihre eigenen Interessen und Faehigkeiten und sind in der Lage, sie zu foerdern.",
+    "Soziale Intelligenz": "Menschen unterscheiden sich in der Fähigkeit, wichtige soziale Informationen, wie z.B. Gefühle, wahrzunehmen und zu verarbeiten. Sozial kompetente Menschen kennen ihre eigenen Motive und Gefühle. Sie kennen auch ihre eigenen Interessen und Fähigkeiten und sind in der Lage, sie zu fördern.",
     
-    "Teamwork": "Menschen mit dieser Staerke zeichnen sich durch ihre Teamfaehigkeit und Loyalitaet gegenueber ihrer Gruppe aus. Sie koennen dann am besten arbeiten, wenn sie Teil einer Gruppe sind. Die Gruppenzugehoerigkeit wird sehr hoch bewertet. Teamfaehige Menschen tragen oft eine soziale Verantwortung.",
+    "Teamwork": "Menschen mit dieser Stärke zeichnen sich durch ihre Teamfähigkeit und Loyalität gegenüber ihrer Gruppe aus. Sie können dann am besten arbeiten, wenn sie Teil einer Gruppe sind. Die Gruppenzugehörigkeit wird sehr hoch bewertet. Teamfähige Menschen tragen oft eine soziale Verantwortung.",
     
-    "Fairness": "Faire Menschen besitzen einen ausgepraegten Sinn fuer Gerechtigkeit und Gleichheit. Jede Person wird von ihnen gleich und fair behandelt, ungeachtet dessen, wer und was sie ist. Sie lassen sich in Entscheidungen nicht durch persoenliche Gefuehle beeinflussen und versuchen allen eine Chance zu geben.",
+    "Fairness": "Faire Menschen besitzen einen ausgeprägten Sinn für Gerechtigkeit und Gleichheit. Jede Person wird von ihnen gleich und fair behandelt, ungeachtet dessen, wer und was sie ist. Sie lassen sich in Entscheidungen nicht durch persönliche Gefühle beeinflussen und versuchen allen eine Chance zu geben.",
     
-    "Führungsvermögen": "Menschen mit einem ausgepraegten Fuehrungsvermoegen besitzen die Faehigkeit, einer Gruppe trotz individueller Unterschiede eine gute Zusammenarbeit zu ermoeglichen. Ebenso zeichnen sie sich durch gute Planungs- und Organisationsfaehigkeiten von Gruppenaktivitaeten aus und dadurch, dass sie auch schwierige Entscheidungen treffen koennen.",
+    "Führungsvermögen": "Menschen mit einem ausgeprägten Führungsvermögen besitzen die Fähigkeit, einer Gruppe trotz individueller Unterschiede eine gute Zusammenarbeit zu ermöglichen. Ebenso zeichnen sie sich durch gute Planungs- und Organisationsfähigkeiten von Gruppenaktivitäten aus und dadurch, dass sie auch schwierige Entscheidungen treffen können.",
     
-    "Vergebungsbereitschaft": "Menschen mit dieser Staerke sind eher in der Lage Vergangenes (z.B. zwischenmenschliche Konflikte) ruhen zu lassen und einen Neuanfang zu wagen. Sie koennen bis zu einem gewissen Punkt Verstaendnis aufbringen fuer die schlechte Behandlung durch andere Menschen und geben ihnen eine Chance zur Wiedergutmachung.",
+    "Vergebungsbereitschaft": "Menschen mit dieser Stärke sind eher in der Lage Vergangenes (z.B. zwischenmenschliche Konflikte) ruhen zu lassen und einen Neuanfang zu wagen. Sie können bis zu einem gewissen Punkt Verständnis aufbringen für die schlechte Behandlung durch andere Menschen und geben ihnen eine Chance zur Wiedergutmachung.",
     
-    "Bescheidenheit": "Bescheidene Menschen zeichnen sich dadurch aus, dass sie nicht mit ihren Erfolgen prahlen. In der Menge fallen sie nicht gerne auf und wollen nicht die Aufmerksamkeit auf sich ziehen, sondern ziehen es vor, andere reden zu lassen. Bescheidene Menschen koennen eigene Fehler und Maengel zugeben.",
+    "Bescheidenheit": "Bescheidene Menschen zeichnen sich dadurch aus, dass sie nicht mit ihren Erfolgen prahlen. In der Menge fallen sie nicht gerne auf und wollen nicht die Aufmerksamkeit auf sich ziehen, sondern ziehen es vor, andere reden zu lassen. Bescheidene Menschen können eigene Fehler und Mängel zugeben.",
     
-    "Vorsicht": "Vorsichtige Menschen treffen Entscheidungen sorgfaeltig, denken ueber moegliche Konsequenzen vor dem Sprechen und Handeln nach und koennen Recht von Unrecht unterscheiden. Sie vermeiden gefaehrliche koerperliche Aktivitaeten, was aber nicht heisst, dass sie neue Erfahrungen meiden.",
+    "Vorsicht": "Vorsichtige Menschen treffen Entscheidungen sorgfältig, denken über mögliche Konsequenzen vor dem Sprechen und Handeln nach und können Recht von Unrecht unterscheiden. Sie vermeiden gefährliche körperliche Aktivitäten, was aber nicht heisst, dass sie neue Erfahrungen meiden.",
     
-    "Selbstregulation": "Menschen mit ausgepraegter Selbstregulation bekunden keine Muehe, ihre Gefuehle und ihr Verhalten in entsprechenden Situationen zu kontrollieren, z.B. eine Diaet durchhalten, sich gesund ernaehren, regelmaessig trainieren, rechtzeitig Aufgaben erledigen. Sie zeichnen sich dadurch aus, dass sie laengerfristigen Erfolg dem kurzfristigen vorziehen.",
+    "Selbstregulation": "Menschen mit ausgeprägter Selbstregulation bekunden keine Mühe, ihre Gefühle und ihr Verhalten in entsprechenden Situationen zu kontrollieren, z.B. eine Diät durchhalten, sich gesund ernähren, regelmässig trainieren, rechtzeitig Aufgaben erledigen. Sie zeichnen sich dadurch aus, dass sie längerfristigen Erfolg dem kurzfristigen vorziehen.",
     
-    "Sinn für das Schöne": "Menschen, die in verschiedenen Lebensbereichen (wie z.B. Musik, Kunst, Natur, Sport, Wissenschaft) Schoenes bewusst wahrnehmen, wertschaetzen und sich darueber freuen koennen, haben einen ausgepraegten Sinn fuer das Schoene. Sie nehmen im Alltag schoene Dinge wahr, die von anderen uebersehen oder nicht beachtet werden.",
+    "Sinn für das Schöne": "Menschen, die in verschiedenen Lebensbereichen (wie z.B. Musik, Kunst, Natur, Sport, Wissenschaft) Schönes bewusst wahrnehmen, wertschätzen und sich darüber freuen können, haben einen ausgeprägten Sinn für das Schöne. Sie nehmen im Alltag schöne Dinge wahr, die von anderen übersehen oder nicht beachtet werden.",
     
-    "Dankbarkeit": "Dankbare Menschen sind sich bewusst ueber die vielen guten Dinge in ihrem Leben, wissen diese zu schaetzen und nehmen sie nicht als selbstverstaendlich hin. Sie nehmen sich die Zeit, ihre Dankbarkeit Menschen gegenueber auszudruecken, z.B. wenn sie ein Geschenk bekommen.",
+    "Dankbarkeit": "Dankbare Menschen sind sich bewusst über die vielen guten Dinge in ihrem Leben, wissen diese zu schätzen und nehmen sie nicht als selbstverständlich hin. Sie nehmen sich die Zeit, ihre Dankbarkeit Menschen gegenüber auszudrücken, z.B. wenn sie ein Geschenk bekommen.",
     
-    "Hoffnung": "Hoffnungsvolle Menschen haben grundsaetzlich eine positive Einstellung gegenueber der Zukunft. Sie sind optimistisch und zuversichtlich und koennen auch dann etwas positiv noch sehen, wenn es fuer andere negativ erscheint. Sie hoffen das Beste fuer die Zukunft und tun ihr Moeglichstes, um ihre Ziele zu erreichen.",
+    "Hoffnung": "Hoffnungsvolle Menschen haben grundsätzlich eine positive Einstellung gegenüber der Zukunft. Sie sind optimistisch und zuversichtlich und können auch dann etwas positiv noch sehen, wenn es für andere negativ erscheint. Sie hoffen das Beste für die Zukunft und tun ihr Möglichstes, um ihre Ziele zu erreichen.",
     
-    "Humor": "Humorvolle Menschen haben gerne und bringen andere Menschen gerne zum Laecheln oder zum Lachen. Sie versuchen ihre Freunde und Freundinnen aufzuheitern, wenn diese in einer bedrueckten Stimmung sind. Menschen mit einem ausgepraegten Sinn fuer Humor versuchen in allen moeglichen Situationen Spass zu haben.",
+    "Humor": "Humorvolle Menschen haben gerne und bringen andere Menschen gerne zum Lächeln oder zum Lachen. Sie versuchen ihre Freunde und Freundinnen aufzuheitern, wenn diese in einer bedrückten Stimmung sind. Menschen mit einem ausgeprägten Sinn für Humor versuchen in allen möglichen Situationen Spass zu haben.",
     
-    "Spiritualität": "Spirituelle Menschen haben kohaerente Ueberzeugungen ueber den hoeheren Sinn und Zweck des Universums. Sie glauben an eine uebermaechtige Macht bzw. an einen Gott. Ihre religioesen Ueberzeugungen beeinflussen ihr Denken, Handeln und Fuehlen und koennen auch in schwierigen Zeiten eine Quelle des Trostes und der Kraft sein."
+    "Spiritualität": "Spirituelle Menschen haben kohärente Überzeugungen über den höheren Sinn und Zweck des Universums. Sie glauben an eine übermächtige Macht bzw. an einen Gott. Ihre religiösen Überzeugungen beeinflussen ihr Denken, Handeln und Fühlen und können auch in schwierigen Zeiten eine Quelle des Trostes und der Kraft sein."
 }
 
 LIKERT_OPTIONS = {
@@ -431,46 +440,103 @@ def create_spider_chart(domain_scores):
     return fig
 
 # ======================
-# 📄 PDF GENERIERUNG (komplett überarbeitet)
+# 📄 PDF GENERIERUNG mit ReportLab
 # ======================
-class SimplePDF(FPDF):
-    def header(self):
-        self.set_font('Arial', 'B', 12)
-        self.cell(0, 10, 'VIA Charakterstaerken Bericht', 0, 1, 'C')
-        self.ln(5)
-    
-    def footer(self):
-        self.set_y(-15)
-        self.set_font('Arial', 'I', 8)
-        self.cell(0, 10, f'Seite {self.page_no()}', 0, 0, 'C')
-
 def create_pdf_report(results, ranking_df):
-    """Erstellt einen einfachen PDF-Bericht ohne komplexe Formatierung"""
+    """Erstellt einen PDF-Bericht mit ReportLab (perfekte UTF-8 Unterstützung)"""
     
-    pdf = SimplePDF()
-    pdf.set_auto_page_break(auto=True, margin=15)
-    pdf.add_page()
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, 
+                          rightMargin=72, leftMargin=72, 
+                          topMargin=72, bottomMargin=72)
+    
+    styles = getSampleStyleSheet()
+    
+    # Custom Styles für bessere Lesbarkeit
+    styles.add(ParagraphStyle(
+        name='CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=16,
+        spaceAfter=30,
+        alignment=1,  # Center
+        textColor='#1f77b4'
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=14,
+        spaceAfter=12,
+        spaceBefore=12,
+        textColor='#2e86ab'
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='StrengthHeader',
+        parent=styles['Heading3'],
+        fontSize=12,
+        spaceAfter=6,
+        spaceBefore=12,
+        textColor='#1f77b4'
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='DomainStyle',
+        parent=styles['Italic'],
+        fontSize=10,
+        spaceAfter=12,
+        textColor='#666666'
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='BodyTextSmall',
+        parent=styles['BodyText'],
+        fontSize=10,
+        spaceAfter=6,
+        leading=14
+    ))
+    
+    # Content sammeln
+    content = []
     
     # Titel
-    pdf.set_font('Arial', 'B', 16)
-    pdf.cell(0, 10, 'VIA Charakterstaerken Bericht', 0, 1, 'C')
-    pdf.ln(10)
+    content.append(Paragraph('VIA Charakterstärken Bericht', styles['CustomTitle']))
+    content.append(Spacer(1, 0.2*inch))
+    
+    # Datum
+    content.append(Paragraph(f'Erstellt am: {datetime.now().strftime("%d.%m.%Y %H:%M")}', styles['Italic']))
+    content.append(Spacer(1, 0.3*inch))
     
     # Einleitung
-    pdf.set_font('Arial', '', 12)
     intro_text = (
         'Dieser Bericht basiert auf dem VIA-IS (Values in Action Inventory of Strengths), '
-        'einem wissenschaftlichen Fragebogen zur Erfassung von 24 Charakterstaerken. '
-        'Ihre persoenlichen Signaturstaerken sind diejenigen Charaktereigenschaften, '
-        'die fuer Sie besonders zentral sind und deren Ausuebung Sie als erfuellend empfinden.'
+        'einem wissenschaftlichen Fragebogen zur Erfassung von 24 Charakterstärken, '
+        'die unter sechs Tugenden eingeordnet werden können. Der VIA-IS wurde unter der '
+        'Leitung der Psychologen Christopher Peterson und Martin Seligman entwickelt.'
     )
-    pdf.multi_cell(0, 8, intro_text)
-    pdf.ln(10)
+    content.append(Paragraph(intro_text, styles['BodyText']))
+    content.append(Spacer(1, 0.1*inch))
+    
+    intro_text2 = (
+        'Die Positive Psychologie, auf der dieser Test basiert, beschäftigt sich mit '
+        'dem optimalen menschlichen Funktionieren. Im Gegensatz zur traditionellen '
+        'Psychologie, die sich oft auf psychische Erkrankungen konzentriert, erforscht '
+        'die Positive Psychologie Faktoren, die ein "gutes Leben" ermöglichen.'
+    )
+    content.append(Paragraph(intro_text2, styles['BodyText']))
+    content.append(Spacer(1, 0.1*inch))
+    
+    intro_text3 = (
+        'Ihre persönlichen Signaturstärken (typischerweise 3-7 Stärken) sind diejenigen '
+        'Charaktereigenschaften, die für Sie besonders zentral sind und deren Ausübung '
+        'Sie als erfüllend empfinden.'
+    )
+    content.append(Paragraph(intro_text3, styles['BodyText']))
+    content.append(Spacer(1, 0.3*inch))
     
     # Top 7 Stärken
-    pdf.set_font('Arial', 'B', 14)
-    pdf.cell(0, 10, 'Ihre Top 7 Signaturstaerken', 0, 1)
-    pdf.ln(5)
+    content.append(Paragraph('Ihre Top 7 Signaturstärken', styles['CustomHeading']))
+    content.append(Spacer(1, 0.2*inch))
     
     top_7_strengths = ranking_df.head(7)
     
@@ -481,50 +547,69 @@ def create_pdf_report(results, ranking_df):
         score = row['Wert']
         
         # Stärken-Header
-        pdf.set_font('Arial', 'B', 12)
-        pdf.cell(0, 8, f'{rank}. {strength_name} ({score})', 0, 1)
-        pdf.set_font('Arial', 'I', 10)
-        pdf.cell(0, 6, f'Domain: {domain}', 0, 1)
+        strength_header = f'{rank}. {strength_name} - {score}'
+        content.append(Paragraph(strength_header, styles['StrengthHeader']))
+        
+        # Domäne
+        domain_text = f'Domäne: {domain}'
+        content.append(Paragraph(domain_text, styles['DomainStyle']))
         
         # Beschreibung
-        pdf.set_font('Arial', '', 10)
-        description = STRENGTH_DESCRIPTIONS.get(strength_name, "Beschreibung nicht verfuegbar.")
-        pdf.multi_cell(0, 6, description)
-        pdf.ln(5)
+        description = STRENGTH_DESCRIPTIONS.get(strength_name, "Beschreibung nicht verfügbar.")
+        content.append(Paragraph(description, styles['BodyTextSmall']))
+        content.append(Spacer(1, 0.15*inch))
+    
+    # Seitenumbruch für Zusammenfassung
+    content.append(PageBreak())
     
     # Zusammenfassung
-    pdf.add_page()
-    pdf.set_font('Arial', 'B', 14)
-    pdf.cell(0, 10, 'Zusammenfassung', 0, 1)
-    pdf.ln(5)
+    content.append(Paragraph('Zusammenfassung und Empfehlungen', styles['CustomHeading']))
+    content.append(Spacer(1, 0.2*inch))
     
-    pdf.set_font('Arial', '', 12)
     summary_text = (
-        'Ihre Signaturstaerken sind ein wertvolles Werkzeug fuer Ihre persoenliche Entwicklung. '
-        'Nutzen Sie diese Staerken bewusst in verschiedenen Lebensbereichen:\n'
-        '\n'
-        '• Berufliche Entscheidungen, die zu Ihren Staerken passen\n'
-        '• Herausforderungen mit Ihren natuerlichen Ressourcen bewältigen\n'
-        '• Erfuellende Beziehungen gestalten\n'
-        '• Mehr Sinn und Zufriedenheit im Alltag finden'
+        'Ihre Signaturstärken sind ein wertvolles Werkzeug für Ihre persönliche Entwicklung. '
+        'Sie können Ihnen helfen, mehr Zufriedenheit und Sinn in verschiedenen Lebensbereichen zu finden.'
     )
-    pdf.multi_cell(0, 8, summary_text)
+    content.append(Paragraph(summary_text, styles['BodyText']))
+    content.append(Spacer(1, 0.2*inch))
     
-    return pdf
+    # Empfehlungen
+    content.append(Paragraph('Wie Sie Ihre Stärken nutzen können:', styles['StrengthHeader']))
+    
+    recommendations = [
+        "Berufliche Entscheidungen treffen, die zu Ihren Stärken passen",
+        "Herausforderungen mit Ihren natürlichen Ressourcen bewältigen",
+        "Erfüllende Beziehungen gestalten",
+        "Mehr Sinn und Zufriedenheit im Alltag finden",
+        "Persönliche Entwicklungsziele setzen, die Ihre Stärken einbeziehen",
+        "Stress besser bewältigen durch den Einsatz Ihrer Charakterstärken",
+        "Teamarbeit und Zusammenarbeit durch komplementäre Stärken verbessern"
+    ]
+    
+    for rec in recommendations:
+        content.append(Paragraph(f"• {rec}", styles['BodyTextSmall']))
+        content.append(Spacer(1, 0.05*inch))
+    
+    content.append(Spacer(1, 0.2*inch))
+    
+    abschluss_text = (
+        'Nutzen Sie diese Stärken bewusst in verschiedenen Lebensbereichen und beobachten Sie, '
+        'wie sich dies auf Ihr Wohlbefinden und Ihre Zufriedenheit auswirkt. Die regelmäßige '
+        'Anwendung Ihrer Signaturstärken kann zu mehr Freude, Engagement und Sinn im Leben führen.'
+    )
+    content.append(Paragraph(abschluss_text, styles['BodyText']))
+    
+    # PDF erstellen
+    doc.build(content)
+    buffer.seek(0)
+    return buffer
 
-def get_pdf_download_link(pdf, filename):
+def get_pdf_download_link(pdf_buffer, filename):
     """Erstellt einen Download-Link für das PDF"""
-    try:
-        # Verwende Bytes-IO anstatt direkte String-Konvertierung
-        pdf_output = pdf.output()
-        b64 = base64.b64encode(pdf_output).decode()
-        href = f'<a href="data:application/pdf;base64,{b64}" download="{filename}">📥 PDF Bericht herunterladen</a>'
-        return href
-    except Exception as e:
-        # Fallback: Erstelle einen einfachen Error-Link
-        error_msg = f"Fehler beim Erstellen des PDFs: {str(e)}"
-        st.error(error_msg)
-        return f'<a href="#" style="color: red;">❌ {error_msg}</a>'
+    pdf_data = pdf_buffer.getvalue()
+    b64 = base64.b64encode(pdf_data).decode()
+    href = f'<a href="data:application/pdf;base64,{b64}" download="{filename}">📥 PDF Bericht herunterladen</a>'
+    return href
 
 # ==========================
 # 🚀 Hauptfunktion
@@ -648,7 +733,7 @@ def main():
             if st.button("📋 PDF Bericht generieren", type="primary", key="pdf_button"):
                 with st.spinner("Erstelle PDF-Bericht..."):
                     try:
-                        pdf = create_pdf_report(
+                        pdf_buffer = create_pdf_report(
                             st.session_state.results, 
                             st.session_state.ranking_df
                         )
@@ -657,10 +742,18 @@ def main():
                         filename = f"VIA_Bericht_{timestamp}.pdf"
                         
                         st.markdown(
-                            get_pdf_download_link(pdf, filename), 
+                            get_pdf_download_link(pdf_buffer, filename), 
                             unsafe_allow_html=True
                         )
                         st.success("✅ PDF Bericht erfolgreich generiert!")
+                        
+                        st.markdown("### 📋 Berichtsinhalt:")
+                        st.markdown("""
+                        - **Einleitung** zum VIA-IS und Positive Psychologie
+                        - **Detaillierte Beschreibungen** Ihrer Top 7 Signaturstärken
+                        - **Zusammenfassung** und Empfehlungen für die Anwendung
+                        - **Professionelles Layout** mit UTF-8 Unterstützung
+                        """)
                         
                     except Exception as e:
                         st.error(f"Fehler beim Erstellen des PDFs: {str(e)}")
